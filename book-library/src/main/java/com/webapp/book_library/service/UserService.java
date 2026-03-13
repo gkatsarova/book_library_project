@@ -45,7 +45,14 @@ public class UserService {
         user.setEmail(registrationDto.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
 
-        Role userRole = roleRepository.findByName(Role.RoleName.ROLE_USER)
+        Role.RoleName roleName;
+        try {
+            roleName = Role.RoleName.valueOf(registrationDto.getRole());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            roleName = Role.RoleName.ROLE_USER;
+        }
+
+        Role userRole = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         
         user.setRoles(Collections.singleton(userRole));
