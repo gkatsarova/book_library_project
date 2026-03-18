@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration - Book Library</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-card">
+    <div class="auth-header">
+        <div class="auth-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            </svg>
+        </div>
+        <h1>Register Account</h1>
+    </div>
+
+    <div id="successAlert" class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <path d="m9 11 3 3L22 4"/>
+        </svg>
+        <span>You've successfully registered! <a href="login.html">Login here</a></span>
+    </div>
+
+    <div id="errorAlert" class="alert alert-danger">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" x2="12" y1="8" y2="12"/>
+            <line x1="12" x2="12.01" y1="16" y2="16"/>
+        </svg>
+        <span></span>
+    </div>
+
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input id="firstName" name="firstName" type="text" required autofocus />
+            <p id="firstNameError" class="field-error"></p>
+        </div>
+
+        <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input id="lastName" name="lastName" type="text" required />
+            <p id="lastNameError" class="field-error"></p>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required />
+            <p id="emailError" class="field-error"></p>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" required />
+            <p id="passwordError" class="field-error"></p>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" required />
+            <p id="confirmPasswordError" class="field-error"></p>
+        </div>
+
+        <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" name="role" required>
+                <option value="ROLE_USER">User</option>
+                <option value="ROLE_ADMIN">Admin</option>
+            </select>
+            <p id="roleError" class="field-error"></p>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">Register</button>
+
+        <div class="form-footer">
+            Already registered? <a href="login.html">Login here</a>
+        </div>
+    </form>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
