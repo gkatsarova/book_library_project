@@ -27,7 +27,7 @@ public record CustomUserDetails(User user) implements UserDetails {
     @Override
     @NonNull
     public String getUsername() {
-        return user.getUsername();
+        return user.getEmail();
     }
 
     @Override

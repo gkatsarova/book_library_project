@@ -25,11 +25,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerNewUserAccount(UserRegistrationDto registrationDto) throws Exception {
-        if (userRepository.existsByUsername(registrationDto.getUsername())) {
-            throw new Exception("There is an account with that username: " + registrationDto.getUsername());
-        }
-
+    public void registerNewUserAccount(UserRegistrationDto registrationDto) throws Exception {
         if (userRepository.existsByEmail(registrationDto.getEmail())) {
             throw new Exception("There is an account with that email address: " + registrationDto.getEmail());
         }
@@ -41,7 +37,6 @@ public class UserService {
         User user = new User();
         user.setFirstName(registrationDto.getFirstName());
         user.setLastName(registrationDto.getLastName());
-        user.setUsername(registrationDto.getUsername());
         user.setEmail(registrationDto.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
 
@@ -57,6 +52,6 @@ public class UserService {
         
         user.setRoles(Collections.singleton(userRole));
 
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 }

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registration - Book Library</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .text-center {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .text-danger {
+            color: red;
+            font-size: 13px;
+            margin-top: 5px;
+            margin-bottom: 0px;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 class="text-center">Register Account</h2>
+
+        <div id="successAlert" class="alert alert-success" style="display: none;">
+            You've successfully registered! <a href="/login.html">Login here</a>
+        </div>
+
+        <div id="errorAlert" class="alert alert-danger" style="display: none;"></div>
+
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input id="firstName" name="firstName" type="text" required autofocus="autofocus" />
+                <p id="firstNameError" class="text-danger" style="display: none;"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input id="lastName" name="lastName" type="text" required />
+                <p id="lastNameError" class="text-danger" style="display: none;"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required />
+                <p id="emailError" class="text-danger" style="display: none;"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" required />
+                <p id="passwordError" class="text-danger" style="display: none;"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input id="confirmPassword" name="confirmPassword" type="password" required />
+                <p id="confirmPasswordError" class="text-danger" style="display: none;">The passwords do not match.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required
+                    style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: white;">
+                    <option value="ROLE_USER">User</option>
+                    <option value="ROLE_ADMIN">Admin</option>
+                </select>
+                <p id="roleError" class="text-danger" style="display: none;"></p>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn" id="submitBtn">Register</button>
+            </div>
+
+            <div class="text-center">
+                <span>Already registered? <a href="/login.html">Login here</a></span>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("registrationForm");
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            const confirmPasswordInput = document.getElementById("confirmPassword");
+            const submitBtn = document.getElementById("submitBtn");
+            const successAlert = document.getElementById("successAlert");
+            const errorAlert = document.getElementById("errorAlert");
+
+            const errorElements = {
+                firstName: document.getElementById("firstNameError"),
+                lastName: document.getElementById("lastNameError"),
+                email: document.getElementById("emailError"),
+                password: document.getElementById("passwordError"),
+                confirmPassword: document.getElementById("confirmPasswordError"),
+                role: document.getElementById("roleError")
+            };
+
+            let isEmailValid = false;
+            let isPasswordValid = false;
+            let isConfirmPasswordValid = false;
+
+            function clearErrors() {
+                Object.values(errorElements).forEach(el => {
+                    el.style.display = "none";
+                    el.textContent = "";
+                });
+                errorAlert.style.display = "none";
+            }
+
+            function updateSubmitBtn() {
+                const allValid = isEmailValid && isPasswordValid && isConfirmPasswordValid;
+                submitBtn.disabled = !allValid;
+                submitBtn.style.opacity = allValid ? "1" : "0.5";
+                submitBtn.style.cursor = allValid ? "pointer" : "not-allowed";
+            }
+
+            emailInput.addEventListener("blur", function () {
+                const email = emailInput.value;
+                if (!email) {
+                    isEmailValid = false;
+                    updateSubmitBtn();
+                    return;
+                }
+                fetch("/api/users/check-email?email=" + encodeURIComponent(email))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            errorElements.email.textContent = "This email is already registered.";
+                            errorElements.email.style.display = "block";
+                            emailInput.style.borderColor = "red";
+                            isEmailValid = false;
+                        } else {
+                            errorElements.email.style.display = "none";
+                            emailInput.style.borderColor = "green";
+                            isEmailValid = true;
+                        }
+                        updateSubmitBtn();
+                    });
+            });
+
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+            function validatePassword() {
+                const password = passwordInput.value;
+                if (!password) {
+                    isPasswordValid = false;
+                } else if (!passwordRegex.test(password)) {
+                    errorElements.password.textContent = "Password must be at least 8 characters, with 1 uppercase, 1 lowercase, 1 digit, and 1 special character.";
+                    errorElements.password.style.display = "block";
+                    passwordInput.style.borderColor = "red";
+                    isPasswordValid = false;
+                } else {
+                    errorElements.password.style.display = "none";
+                    passwordInput.style.borderColor = "green";
+                    isPasswordValid = true;
+                }
+                validateConfirmPassword();
+            }
+
+            function validateConfirmPassword() {
+                const confirmPassword = confirmPasswordInput.value;
+                if (!confirmPassword) {
+                    isConfirmPasswordValid = false;
+                } else if (confirmPassword !== passwordInput.value) {
+                    errorElements.confirmPassword.style.display = "block";
+                    confirmPasswordInput.style.borderColor = "red";
+                    isConfirmPasswordValid = false;
+                } else {
+                    errorElements.confirmPassword.style.display = "none";
+                    confirmPasswordInput.style.borderColor = "green";
+                    isConfirmPasswordValid = true;
+                }
+                updateSubmitBtn();
+            }
+
+            passwordInput.addEventListener("input", validatePassword);
+            confirmPasswordInput.addEventListener("input", validateConfirmPassword);
+
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                clearErrors();
+
+                const formData = {
+                    firstName: document.getElementById("firstName").value,
+                    lastName: document.getElementById("lastName").value,
+                    email: emailInput.value,
+                    password: passwordInput.value,
+                    confirmPassword: confirmPasswordInput.value,
+                    role: document.getElementById("role").value
+                };
+
+                fetch("/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (response.ok) {
+                        successAlert.style.display = "block";
+                        form.style.display = "none";
+                    } else if (response.status === 400) {
+                        // Validation errors
+                        Object.keys(data).forEach(field => {
+                            if (errorElements[field]) {
+                                errorElements[field].textContent = data[field];
+                                errorElements[field].style.display = "block";
+                            }
+                        });
+                    } else {
+                        errorAlert.textContent = data.error || "An unexpected error occurred.";
+                        errorAlert.style.display = "block";
+                    }
+                })
+                .catch(error => {
+                    errorAlert.textContent = "Failed to connect to the server.";
+                    errorAlert.style.display = "block";
+                });
+            });
+
+            updateSubmitBtn();
+        });
+    </script>
+</body>
+
+</html>

@@ -4,14 +4,19 @@ import com.webapp.book_library.dto.UserRegistrationDto;
 import com.webapp.book_library.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RestController
 public class AuthController {
 
     private final UserService userService;
@@ -21,32 +26,32 @@ public class AuthController {
         this.userService = userService;
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
-
-    @GetMapping("/register")
-    public String showRegistrationForm(Model model) {
-        model.addAttribute("user", new UserRegistrationDto());
-        return "register";
-    }
-
     @PostMapping("/register")
-    public String registerUserAccount(@Valid @ModelAttribute("user") UserRegistrationDto registrationDto, 
-                                      BindingResult result, Model model) {
+    public ResponseEntity<?> registerUserAccount(@Valid @RequestBody UserRegistrationDto registrationDto, 
+                                              BindingResult result) {
         
         if (result.hasErrors()) {
-            return "register";
+            Map<String, String> errors = result.getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        fieldError -> fieldError.getDefaultMessage() != null
+                                ? fieldError.getDefaultMessage()
+                                : "Invalid",
+                        (existing, replacement) -> existing
+                ));
+            return ResponseEntity.badRequest().body(errors);
         }
         
         try {
             userService.registerNewUserAccount(registrationDto);
         } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "register";
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
-        return "redirect:/register?success";
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Registration successful");
+        return ResponseEntity.ok(response);
     }
 }
