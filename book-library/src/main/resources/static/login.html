@@ -2,40 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Book Library</title>
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; margin: 0; }
-        .container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px;}
-        .btn:hover { background-color: #0056b3; }
-        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .text-center { text-align: center; margin-top: 15px; }
-        a { color: #007bff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <h2 class="text-center">Welcome Back</h2>
-
-    <div id="errorAlert" class="alert alert-danger" style="display: none;">
-        Invalid email or password.
+<div class="auth-card">
+    <div class="auth-header">
+        <div class="auth-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" x2="12" y1="8" y2="12"/>
+                <line x1="12" x2="12.01" y1="16" y2="16"/>
+            </svg>
+        </div>
+        <h1>Welcome Back</h1>
     </div>
 
-    <div id="logoutAlert" class="alert alert-success" style="display: none;">
-        You have been logged out.
+    <div id="errorAlert" class="alert alert-danger">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <path d="m9 11 3 3L22 4"/>
+        </svg>
+        <span>Invalid email or password.</span>
+    </div>
+
+    <div id="logoutAlert" class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <path d="m9 11 3 3L22 4"/>
+        </svg>
+        <span>You have been logged out.</span>
     </div>
 
     <form action="/login" method="post">
         <div class="form-group">
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" required autofocus="autofocus" />
+            <input id="email" name="email" type="email" required autofocus />
         </div>
 
         <div class="form-group">
@@ -43,27 +47,14 @@
             <input id="password" name="password" type="password" required />
         </div>
 
-        <div class="form-group">
-            <button type="submit" class="btn">Login</button>
-        </div>
-        
-        <div class="text-center">
-            <span>Don't have an account? <a href="/register.html">Register here</a></span>
+        <button type="submit" class="btn">Login</button>
+
+        <div class="form-footer">
+            Don't have an account? <a href="register.html">Register here</a>
         </div>
     </form>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('error')) {
-            document.getElementById('errorAlert').style.display = 'block';
-        }
-        if (urlParams.has('logout')) {
-            document.getElementById('logoutAlert').style.display = 'block';
-        }
-    });
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
