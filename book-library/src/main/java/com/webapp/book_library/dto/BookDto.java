@@ -18,4 +18,5 @@ public class BookDto {
     private String authorName;
     private Set<Long> categoryIds;
     private Set<String> categoryNames;
+    private String coverImageUrl;
 }

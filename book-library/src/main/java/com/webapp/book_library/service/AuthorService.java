@@ -16,12 +16,14 @@ public class AuthorService {
 
     private final AuthorRepository authorRepository;
 
+    @Transactional(readOnly = true)
     public List<AuthorDto> getAllAuthors() {
         return authorRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public AuthorDto getAuthorById(Long id) {
         Author author = authorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Author not found"));

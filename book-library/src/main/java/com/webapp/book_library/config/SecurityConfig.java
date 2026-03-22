@@ -17,8 +17,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/login.html", "/register.html", "/api/**", "/register").permitAll()
+                .requestMatchers("/login.html", "/register.html", "/register").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/style.css", "/script.js").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/me").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/users/me/profile").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

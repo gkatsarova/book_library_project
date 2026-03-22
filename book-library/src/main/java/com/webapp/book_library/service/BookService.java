@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,12 +25,14 @@ public class BookService {
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
 
+    @Transactional(readOnly = true)
     public List<BookDto> getAllBooks() {
         return bookRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public BookDto getBookById(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
@@ -42,12 +45,24 @@ public class BookService {
         book.setTitle(bookDto.getTitle());
         book.setDescription(bookDto.getDescription());
         book.setIsbn(bookDto.getIsbn());
+        book.setCoverImageUrl(bookDto.getCoverImageUrl());
 
         Author author = authorRepository.findById(bookDto.getAuthorId())
                 .orElseThrow(() -> new RuntimeException("Author not found"));
         book.setAuthor(author);
 
-        if (bookDto.getCategoryIds() != null) {
+        if (bookDto.getCategoryNames() != null && !bookDto.getCategoryNames().isEmpty()) {
+            Set<Category> categories = bookDto.getCategoryNames().stream()
+                    .filter(name -> name != null && !name.trim().isEmpty())
+                    .map(name -> categoryRepository.findByName(name.trim())
+                            .orElseGet(() -> {
+                                Category newCat = new Category();
+                                newCat.setName(name.trim());
+                                return categoryRepository.save(newCat);
+                            }))
+                    .collect(Collectors.toSet());
+            book.setCategories(categories);
+        } else if (bookDto.getCategoryIds() != null) {
             Set<Category> categories = new HashSet<>(categoryRepository.findAllById(bookDto.getCategoryIds()));
             book.setCategories(categories);
         }
@@ -64,12 +79,24 @@ public class BookService {
         book.setTitle(bookDto.getTitle());
         book.setDescription(bookDto.getDescription());
         book.setIsbn(bookDto.getIsbn());
+        book.setCoverImageUrl(bookDto.getCoverImageUrl());
 
         Author author = authorRepository.findById(bookDto.getAuthorId())
                 .orElseThrow(() -> new RuntimeException("Author not found"));
         book.setAuthor(author);
 
-        if (bookDto.getCategoryIds() != null) {
+        if (bookDto.getCategoryNames() != null && !bookDto.getCategoryNames().isEmpty()) {
+            Set<Category> categories = bookDto.getCategoryNames().stream()
+                    .filter(name -> name != null && !name.trim().isEmpty())
+                    .map(name -> categoryRepository.findByName(name.trim())
+                            .orElseGet(() -> {
+                                Category newCat = new Category();
+                                newCat.setName(name.trim());
+                                return categoryRepository.save(newCat);
+                            }))
+                    .collect(Collectors.toSet());
+            book.setCategories(categories);
+        } else if (bookDto.getCategoryIds() != null) {
             Set<Category> categories = new HashSet<>(categoryRepository.findAllById(bookDto.getCategoryIds()));
             book.setCategories(categories);
         }
@@ -89,10 +116,24 @@ public class BookService {
         dto.setTitle(book.getTitle());
         dto.setDescription(book.getDescription());
         dto.setIsbn(book.getIsbn());
-        dto.setAuthorId(book.getAuthor().getId());
-        dto.setAuthorName(book.getAuthor().getName());
-        dto.setCategoryIds(book.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
-        dto.setCategoryNames(book.getCategories().stream().map(Category::getName).collect(Collectors.toSet()));
+        
+        if (book.getAuthor() != null) {
+            dto.setAuthorId(book.getAuthor().getId());
+            dto.setAuthorName(book.getAuthor().getName());
+        }
+        
+        if (book.getCategories() != null) {
+            dto.setCategoryIds(book.getCategories().stream()
+                    .filter(Objects::nonNull)
+                    .map(Category::getId)
+                    .collect(Collectors.toSet()));
+            dto.setCategoryNames(book.getCategories().stream()
+                    .filter(Objects::nonNull)
+                    .map(Category::getName)
+                    .collect(Collectors.toSet()));
+        }
+        
+        dto.setCoverImageUrl(book.getCoverImageUrl());
         return dto;
     }
 }

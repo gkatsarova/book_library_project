@@ -29,6 +29,5 @@ public class UserRegistrationDto {
     @NotBlank(message = "Please confirm your password")
     private String confirmPassword;
     
-    @NotBlank(message = "Role is required")
     private String role;
 }
