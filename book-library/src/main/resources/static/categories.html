@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Library - Categories</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">
+            <i class="fas fa-book-reader"></i>
+            <span>BookLibrary</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="categories.html" class="active">Categories</a></li>
+            <li class="admin-only hidden"><a href="users.html">Users</a></li>
+            <li id="profile-link" class="hidden"><a href="profile.html">Profile</a></li>
+            <li id="login-link"><a href="login.html" class="btn">Login</a></li>
+            <li id="logout-link" class="hidden"><a href="#" onclick="auth.logout()" class="btn btn-outline">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="section-header">
+            <h1>Book Categories</h1>
+            <button class="btn admin-only hidden" onclick="ui.showModal('category-modal')">Add Category</button>
+        </div>
+        <div class="content-grid" id="categories-list"></div>
+    </div>
+
+    <div id="category-modal" class="modal hidden">
+        <div class="auth-card" style="max-width: 28rem; margin: auto;">
+            <h2>Category Details</h2>
+            <form id="category-form">
+                <div class="form-group">
+                    <label>Category Name</label>
+                    <label for="category-name">
+                        <input type="text" id="category-name" required>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn" style="flex: 1;">Save</button>
+                    <button type="button" class="btn btn-outline" onclick="ui.hideModal('category-modal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; z-index: 1000;
+        }
+        .modal.hidden { display: none; }
+        .active { border-bottom: 2px solid var(--primary); }
+    </style>
+
+    <script src="script.js?v=1.1"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await ui.updateAuthLinks();
+                await categories.loadAll();
+            } catch (err) {
+                console.error('Initialization error:', err);
+            }
+        });
+    </script>
+</body>
+</html>

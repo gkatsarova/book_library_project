@@ -3,26 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Library</title>
+    <title>Book Library - Home</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-
-<div class="index-page">
-    <div class="auth-header">
-        <div class="auth-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            </svg>
+    <nav>
+        <div class="nav-brand">
+            <i class="fas fa-book-reader"></i>
+            <span>BookLibrary</span>
         </div>
-        <h1>Book Library</h1>
-    </div>
-    <div class="index-buttons">
-        <a href="login.html" class="btn">Login</a>
-        <a href="register.html" class="btn btn-outline">Register</a>
-    </div>
-</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li class="admin-only hidden"><a href="users.html">Users</a></li>
+            <li id="profile-link" class="hidden"><a href="profile.html">Profile</a></li>
+            <li id="login-link"><a href="login.html" class="btn">Login</a></li>
+            <li id="logout-link" class="hidden"><a href="#" onclick="auth.logout()" class="btn btn-outline">Logout</a></li>
+        </ul>
+    </nav>
 
+    <div class="container">
+        <div class="auth-card">
+            <h1>Book Library Management</h1>
+            <p>Welcome to the digital library system. Manage your books and authors with ease.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="label">Total Books</div>
+                <div class="value" id="total-books">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Authors</div>
+                <div class="value" id="total-authors">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Categories</div>
+                <div class="value" id="total-categories">0</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <h2>Recent Books</h2>
+            <div class="content-grid" id="recent-books-list" style="margin-top: 1rem;">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=1.1"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await ui.updateAuthLinks();
+                await dashboard.loadStats();
+                await dashboard.loadRecentBooks();
+            } catch (err) {
+                console.error('Initialization error:', err);
+            }
+        });
+    </script>
 </body>
 </html>

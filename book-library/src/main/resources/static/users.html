@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Library - Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">
+            <i class="fas fa-book-reader"></i>
+            <span>BookLibrary</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li class="admin-only hidden"><a href="users.html" class="active">Users</a></li>
+            <li id="profile-link" class="hidden"><a href="profile.html">Profile</a></li>
+            <li id="login-link"><a href="login.html" class="btn">Login</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="section-header">
+            <h1>User Management</h1>
+            <p>View all registered users and their roles.</p>
+        </div>
+        
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: var(--secondary); color: var(--secondary-foreground);">
+                    <tr>
+                        <th style="padding: 1rem; text-align: left;">Name</th>
+                        <th style="padding: 1rem; text-align: left;">Email</th>
+                        <th style="padding: 1rem; text-align: left;">Roles</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list-body">
+                    <tr><td colspan="3" style="padding: 2rem; text-align: center;">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <style>
+        th, td { border-bottom: 1px solid var(--border); }
+        .active { border-bottom: 2px solid var(--primary); }
+    </style>
+
+    <script src="script.js?v=1.1"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const user = await auth.getCurrentUser();
+                if (!user || !user.isAdmin) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                await ui.updateAuthLinks();
+                await users.loadAll();
+            } catch (err) {
+                console.error('Initialization error:', err);
+            }
+        });
+    </script>
+</body>
+</html>

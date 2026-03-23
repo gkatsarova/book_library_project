@@ -1,182 +1,344 @@
-/* ── Shared: SVG Icons ── */
-const ICON_BOOK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>';
-const ICON_ALERT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>';
-const ICON_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>';
-
-/* ── LOGIN PAGE ── */
-function initLogin() {
-  const form = document.querySelector('form');
-  if (!form) return;
-
-  const urlParams = new URLSearchParams(window.location.search);
-
-  if (urlParams.has('error')) {
-    document.getElementById('errorAlert').classList.add('visible');
-  }
-  if (urlParams.has('logout')) {
-    document.getElementById('logoutAlert').classList.add('visible');
-  }
-}
-
-/* ── REGISTER PAGE ── */
-function initRegister() {
-  const form = document.getElementById('registrationForm');
-  if (!form) return;
-
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const confirmPasswordInput = document.getElementById('confirmPassword');
-  const submitBtn = document.getElementById('submitBtn');
-  const successAlert = document.getElementById('successAlert');
-  const errorAlert = document.getElementById('errorAlert');
-
-  const errorElements = {
-    firstName: document.getElementById('firstNameError'),
-    lastName: document.getElementById('lastNameError'),
-    email: document.getElementById('emailError'),
-    password: document.getElementById('passwordError'),
-    confirmPassword: document.getElementById('confirmPasswordError'),
-    role: document.getElementById('roleError')
-  };
-
-  let isEmailValid = false;
-  let isPasswordValid = false;
-  let isConfirmPasswordValid = false;
-
-  function clearErrors() {
-    Object.values(errorElements).forEach(el => {
-      el.style.display = 'none';
-      el.textContent = '';
-    });
-    errorAlert.classList.remove('visible');
-  }
-
-  function updateSubmitBtn() {
-    const allValid = isEmailValid && isPasswordValid && isConfirmPasswordValid;
-    submitBtn.disabled = !allValid;
-  }
-
-  emailInput.addEventListener('blur', function () {
-    const email = emailInput.value;
-    if (!email) {
-      isEmailValid = false;
-      emailInput.classList.remove('is-valid', 'is-invalid');
-      updateSubmitBtn();
-      return;
-    }
-    fetch('/api/users/check-email?email=' + encodeURIComponent(email))
-      .then(response => response.json())
-      .then(data => {
-        if (data.exists) {
-          errorElements.email.textContent = 'This email is already registered.';
-          errorElements.email.style.display = 'block';
-          emailInput.classList.add('is-invalid');
-          emailInput.classList.remove('is-valid');
-          isEmailValid = false;
-        } else {
-          errorElements.email.style.display = 'none';
-          emailInput.classList.add('is-valid');
-          emailInput.classList.remove('is-invalid');
-          isEmailValid = true;
+const api = {
+    async get(url) {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.status === 401) return null;
+        if (!res.ok) {
+            console.error(`API Error: ${res.status} ${res.statusText} at ${url}`);
+            try {
+                const errData = await res.json();
+                console.error('API Error details:', errData);
+            } catch (e) {}
+            throw new Error('API Error');
         }
-        updateSubmitBtn();
-      });
-  });
-
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-  function validatePassword() {
-    const password = passwordInput.value;
-    if (!password) {
-      isPasswordValid = false;
-      passwordInput.classList.remove('is-valid', 'is-invalid');
-    } else if (!passwordRegex.test(password)) {
-      errorElements.password.textContent = 'Password must be at least 8 characters, with 1 uppercase, 1 lowercase, 1 digit, and 1 special character.';
-      errorElements.password.style.display = 'block';
-      passwordInput.classList.add('is-invalid');
-      passwordInput.classList.remove('is-valid');
-      isPasswordValid = false;
-    } else {
-      errorElements.password.style.display = 'none';
-      passwordInput.classList.add('is-valid');
-      passwordInput.classList.remove('is-invalid');
-      isPasswordValid = true;
-    }
-    validateConfirmPassword();
-  }
-
-  function validateConfirmPassword() {
-    const confirmPassword = confirmPasswordInput.value;
-    if (!confirmPassword) {
-      isConfirmPasswordValid = false;
-      confirmPasswordInput.classList.remove('is-valid', 'is-invalid');
-    } else if (confirmPassword !== passwordInput.value) {
-      errorElements.confirmPassword.textContent = 'The passwords do not match.';
-      errorElements.confirmPassword.style.display = 'block';
-      confirmPasswordInput.classList.add('is-invalid');
-      confirmPasswordInput.classList.remove('is-valid');
-      isConfirmPasswordValid = false;
-    } else {
-      errorElements.confirmPassword.style.display = 'none';
-      confirmPasswordInput.classList.add('is-valid');
-      confirmPasswordInput.classList.remove('is-invalid');
-      isConfirmPasswordValid = true;
-    }
-    updateSubmitBtn();
-  }
-
-  passwordInput.addEventListener('input', validatePassword);
-  confirmPasswordInput.addEventListener('input', validateConfirmPassword);
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    clearErrors();
-
-    const formData = {
-      firstName: document.getElementById('firstName').value,
-      lastName: document.getElementById('lastName').value,
-      email: emailInput.value,
-      password: passwordInput.value,
-      confirmPassword: confirmPasswordInput.value,
-      role: document.getElementById('role').value
-    };
-
-    fetch('/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-      .then(async response => {
-        const data = await response.json();
-        if (response.ok) {
-          successAlert.classList.add('visible');
-          form.style.display = 'none';
-        } else if (response.status === 400) {
-          Object.keys(data).forEach(field => {
-            if (errorElements[field]) {
-              errorElements[field].textContent = data[field];
-              errorElements[field].style.display = 'block';
-            }
-          });
-        } else {
-          errorAlert.querySelector('span').textContent = data.error || 'An unexpected error occurred.';
-          errorAlert.classList.add('visible');
+        return res.json();
+    },
+    async post(url, data) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            cache: 'no-store'
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || 'Post failed');
         }
-      })
-      .catch(() => {
-        errorAlert.querySelector('span').textContent = 'Failed to connect to the server.';
-        errorAlert.classList.add('visible');
-      });
-  });
+        return res.json();
+    },
+    async put(url, data) {
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            cache: 'no-store'
+        });
+        if (!res.ok) throw new Error('Update failed');
+        return res.json();
+    },
+    async delete(url) {
+        const res = await fetch(url, { method: 'DELETE', cache: 'no-store' });
+        return res.ok;
+    }
+};
 
-  updateSubmitBtn();
-}
+const auth = {
+    async getCurrentUser() {
+        return await api.get('/api/users/me');
+    },
+    logout() {
+        window.location.href = '/logout';
+    }
+};
 
-/* ── Auto-init based on page ── */
-document.addEventListener('DOMContentLoaded', function () {
-  if (document.getElementById('registrationForm')) {
-    initRegister();
-  } else {
-    initLogin();
-  }
+const ui = {
+    async updateAuthLinks() {
+        const user = await auth.getCurrentUser();
+        // Diagnostic log
+        console.log('DEBUG: Current User session data:', user);
+        
+        const loginLink = document.getElementById('login-link');
+        const logoutLink = document.getElementById('logout-link');
+        const profileLink = document.getElementById('profile-link');
+        
+        if (user) {
+            if (loginLink) loginLink.classList.add('hidden');
+            if (logoutLink) logoutLink.classList.remove('hidden');
+            if (profileLink) profileLink.classList.remove('hidden');
+
+            const isAdmin = user.isAdmin === true;
+            document.querySelectorAll('.admin-only').forEach(el => {
+                if (isAdmin) {
+                    el.classList.remove('hidden');
+                    if (el.tagName === 'DIV' || el.tagName === 'LI') {
+                        el.style.display = '';
+                        if (el.id === 'add-book-container' || el.classList.contains('flex-gap-container')) {
+                             el.classList.add('flex-gap');
+                        }
+                    }
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex-gap');
+                }
+            });
+        } else {
+            if (loginLink) loginLink.classList.remove('hidden');
+            if (logoutLink) logoutLink.classList.add('hidden');
+            if (profileLink) profileLink.classList.add('hidden');
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+        }
+    },
+    showModal(id) {
+        document.getElementById(id).classList.remove('hidden');
+    },
+    hideModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    },
+    showAlert(id, message, type = 'danger') {
+        const alert = document.getElementById(id);
+        if (!alert) return;
+        alert.className = `alert alert-${type} visible`;
+        const span = alert.querySelector('span');
+        if (span) span.textContent = message;
+        setTimeout(() => alert.classList.remove('visible'), 5000);
+    }
+};
+
+const dashboard = {
+    async loadStats() {
+        try {
+            const b = await api.get('/api/books') || [];
+            const a = await api.get('/api/authors') || [];
+            const c = await api.get('/api/categories') || [];
+            if (document.getElementById('total-books')) document.getElementById('total-books').textContent = b.length;
+            if (document.getElementById('total-authors')) document.getElementById('total-authors').textContent = a.length;
+            if (document.getElementById('total-categories')) document.getElementById('total-categories').textContent = c.length;
+        } catch (e) { console.error('Stats error', e); }
+    },
+    async loadRecentBooks() {
+        const list = document.getElementById('recent-books-list');
+        if (!list) return;
+        try {
+            const books = await api.get('/api/books') || [];
+            list.innerHTML = books.slice(-3).reverse().map(book => `
+                <div class="card">
+                    <div style="height: 200px; background: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; border-radius: 8px; overflow: hidden;">
+                        ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
+                    </div>
+                    <h3>${book.title}</h3>
+                    <div class="meta">By ${book.authorName}</div>
+                    <p>${book.description ? book.description.substring(0, 100) + '...' : 'No description'}</p>
+                </div>
+            `).join('') || '<p>No books added yet.</p>';
+        } catch (e) { list.innerHTML = 'Error loading books.'; }
+    }
+};
+
+const books = {
+    async loadAll() {
+        const list = document.getElementById('books-list');
+        if (!list) return;
+        const data = await api.get('/api/books') || [];
+        list.innerHTML = data.map(book => `
+            <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
+                <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-2x" style="color: var(--primary);"></i>`}
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin-top: 0;">${book.title}</h3>
+                    <div class="meta">By ${book.authorName} | ISBN: ${book.isbn}</div>
+                    <div class="admin-only hidden flex-gap" style="margin-top: 1rem;">
+                        <button class="btn" onclick="books.edit(${book.id})">Edit</button>
+                        <button class="btn btn-outline" onclick="books.delete(${book.id})">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `).join('') || '<p>No books found.</p>';
+        await ui.updateAuthLinks();
+    },
+    async loadAuthorsForSelect() {
+        const authors = await api.get('/api/authors') || [];
+        const select = document.getElementById('book-author');
+        if (select) {
+            select.innerHTML = '<option value="">Select Author</option>' + 
+                authors.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        }
+    },
+    async edit(id) {
+        const book = await api.get('/api/books/' + id);
+        document.getElementById('book-id').value = book.id;
+        document.getElementById('book-title').value = book.title;
+        document.getElementById('book-author').value = book.authorId;
+        document.getElementById('book-isbn').value = book.isbn;
+        document.getElementById('book-cover').value = book.coverImageUrl || '';
+        document.getElementById('book-categories').value = book.categoryNames ? Array.from(book.categoryNames).join(', ') : '';
+        document.getElementById('book-description').value = book.description;
+        ui.showModal('book-modal');
+    },
+    async delete(id) {
+        if (confirm('Delete this book?')) {
+            await api.delete('/api/books/' + id);
+            books.loadAll();
+        }
+    }
+};
+
+const authors = {
+    async loadAll() {
+        const list = document.getElementById('authors-list');
+        if (!list) return;
+        const data = await api.get('/api/authors') || [];
+        list.innerHTML = data.map(author => `
+            <div class="card">
+                <h3>${author.name}</h3>
+                <p>${author.biography || 'No biography available.'}</p>
+                <div class="admin-only hidden flex-gap" style="margin-top: 1rem;">
+                    <button class="btn" onclick="authors.edit(${author.id})">Edit</button>
+                    <button class="btn btn-outline" onclick="authors.delete(${author.id})">Delete</button>
+                </div>
+            </div>
+        `).join('') || '<p>No authors found.</p>';
+        await ui.updateAuthLinks();
+    },
+    async edit(id) {
+        const author = await api.get('/api/authors/' + id);
+        document.getElementById('author-id').value = author.id;
+        document.getElementById('author-name').value = author.name;
+        document.getElementById('author-biography').value = author.biography;
+        ui.showModal('author-modal');
+    },
+    async delete(id) {
+        if (confirm('Delete this author?')) {
+            await api.delete('/api/authors/' + id);
+            authors.loadAll();
+        }
+    }
+};
+
+const categories = {
+    async loadAll() {
+        const list = document.getElementById('categories-list');
+        if (!list) return;
+        const data = await api.get('/api/categories') || [];
+        list.innerHTML = data.map(cat => `
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">${cat.name}</h3>
+                <button class="btn btn-outline admin-only hidden" style="width: auto;" onclick="categories.delete(${cat.id})">Delete</button>
+            </div>
+        `).join('') || '<p>No categories found.</p>';
+        await ui.updateAuthLinks();
+    },
+    async delete(id) {
+        if (confirm('Delete this category?')) {
+            await api.delete('/api/categories/' + id);
+            categories.loadAll();
+        }
+    }
+};
+
+const users = {
+    async loadAll() {
+        const body = document.getElementById('user-list-body');
+        if (!body) return;
+        try {
+            const data = await api.get('/api/users') || [];
+            body.innerHTML = data.map(u => `
+                <tr>
+                    <td style="padding: 1rem;">${u.firstName} ${u.lastName}</td>
+                    <td style="padding: 1rem;">${u.email}</td>
+                    <td style="padding: 1rem;">${u.roles.join(', ')}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="3" style="padding: 2rem; text-align: center;">No users found.</td></tr>';
+        } catch (e) { 
+            console.error('User list error', e);
+            body.innerHTML = '<tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--destructive);">Access Denied</td></tr>'; 
+        }
+    }
+};
+
+const profile = {
+    async load() {
+        const user = await auth.getCurrentUser();
+        if (!user) return;
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-name').textContent = user.firstName + ' ' + user.lastName;
+        if (user.profile) {
+            document.getElementById('profile-phone').value = user.profile.phoneNumber || '';
+            document.getElementById('profile-address').value = user.profile.address || '';
+            document.getElementById('profile-birth').value = user.profile.birthDate || '';
+        }
+    }
+};
+
+// Form Event Listeners (Unified)
+document.addEventListener('submit', async (e) => {
+    if (e.target.id === 'registrationForm') {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.target));
+        if (data.password !== data.confirmPassword) {
+            ui.showAlert('errorAlert', 'Passwords do not match');
+            return;
+        }
+        try {
+            await api.post('/register', data);
+            ui.showAlert('successAlert', 'Registration successful! Redirecting to login...', 'success');
+            setTimeout(() => window.location.href = 'login.html', 2000);
+        } catch (err) { ui.showAlert('errorAlert', err.message); }
+    }
+
+    if (e.target.id === 'author-form') {
+        e.preventDefault();
+        const id = document.getElementById('author-id').value;
+        const data = {
+            name: document.getElementById('author-name').value,
+            biography: document.getElementById('author-biography').value
+        };
+        try {
+            if (id) await api.put('/api/authors/' + id, data);
+            else await api.post('/api/authors', data);
+            ui.hideModal('author-modal');
+            authors.loadAll();
+        } catch (err) { alert(err.message); }
+    }
+
+    if (e.target.id === 'book-form') {
+        e.preventDefault();
+        const id = document.getElementById('book-id').value;
+        const data = {
+            title: document.getElementById('book-title').value,
+            authorId: document.getElementById('book-author').value,
+            isbn: document.getElementById('book-isbn').value,
+            coverImageUrl: document.getElementById('book-cover').value,
+            categoryNames: document.getElementById('book-categories').value.split(',').map(s => s.trim()).filter(s => s !== ''),
+            description: document.getElementById('book-description').value
+        };
+        try {
+            if (id) await api.put('/api/books/' + id, data);
+            else await api.post('/api/books', data);
+            ui.hideModal('book-modal');
+            books.loadAll();
+        } catch (err) { alert(err.message); }
+    }
+
+    if (e.target.id === 'category-form') {
+        e.preventDefault();
+        const data = { name: document.getElementById('category-name').value };
+        try {
+            await api.post('/api/categories', data);
+            ui.hideModal('category-modal');
+            categories.loadAll();
+        } catch (err) { alert(err.message); }
+    }
+
+    if (e.target.id === 'profile-form') {
+        e.preventDefault();
+        const data = {
+            phoneNumber: document.getElementById('profile-phone').value,
+            address: document.getElementById('profile-address').value,
+            birthDate: document.getElementById('profile-birth').value
+        };
+        try {
+            await api.put('/api/users/me/profile', data);
+            alert('Profile updated successfully!');
+        } catch (err) { alert(err.message); }
+    }
 });
