@@ -301,10 +301,13 @@ const users = {
                     <td style="padding: 1rem;">${u.firstName} ${u.lastName}</td>
                     <td style="padding: 1rem;">${u.email}</td>
                     <td style="padding: 1rem;">${u.roles.join(', ')}</td>
-                    <td style="padding: 1rem;">
+                    <td style="padding: 1rem; display: flex; gap: 0.5rem;">
                         ${(currentUser && currentUser.id === u.id) ? 
-                            '<span class="badge badge-outline">You</span>' : 
-                            `<button class="btn btn-sm btn-destructive" onclick="users.delete(${u.id})">Delete</button>`
+                            '<span class="badge badge-outline">You (Admin)</span>' : 
+                            `
+                            <button class="btn btn-sm btn-outline" onclick="location.href='user-details.html?id=${u.id}'">View</button>
+                            <button class="btn btn-sm btn-destructive" onclick="users.delete(${u.id})">Delete</button>
+                            `
                         }
                     </td>
                 </tr>
@@ -325,6 +328,58 @@ const users = {
                     alert('Failed to delete user.');
                 }
             } catch (err) { alert(err.message); }
+        }
+    }
+};
+
+const adminDetails = {
+    async load(userId) {
+        const rentalsList = document.getElementById('detail-rentals-list');
+        const historyList = document.getElementById('detail-history-list');
+        try {
+            const [user, userRentals] = await Promise.all([
+                api.get('/api/users/' + userId),
+                api.get('/api/rentals/user/' + userId)
+            ]);
+
+            document.getElementById('detail-user-name').textContent = `${user.firstName} ${user.lastName}'s Profile`;
+            document.getElementById('detail-user-email').textContent = user.email;
+
+            // Active Rentals
+            const active = userRentals.filter(r => r.status === 'ACTIVE');
+            if (active.length > 0) {
+                rentalsList.innerHTML = active.map(r => `
+                    <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0;">${r.bookTitle}</h4>
+                            <div class="meta">Due: ${new Date(r.returnDate).toLocaleDateString()}</div>
+                        </div>
+                        <span class="badge badge-primary">Active</span>
+                    </div>
+                `).join('');
+            } else {
+                rentalsList.innerHTML = '<p>No active rentals.</p>';
+            }
+
+            // History
+            const history = userRentals.filter(r => r.status === 'RETURNED');
+            if (history.length > 0) {
+                historyList.innerHTML = history.map(r => `
+                    <div class="card" style="margin-bottom: 1rem; opacity: 0.8; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0;">${r.bookTitle}</h4>
+                            <div class="meta">Rented: ${new Date(r.rentalDate).toLocaleDateString()} | Returned: ${new Date(r.actualReturnDate).toLocaleDateString()}</div>
+                            ${r.fine > 0 ? `<div style="color: var(--destructive); font-weight: 600;">Fine Paid: ${r.fine.toFixed(2)} EUR</div>` : ''}
+                        </div>
+                        <span class="badge">Returned</span>
+                    </div>
+                `).join('');
+            } else {
+                historyList.innerHTML = '<p>No history.</p>';
+            }
+        } catch (e) {
+            console.error('Error loading details:', e);
+            rentalsList.innerHTML = '<p style="color: var(--destructive);">Failed to load user details.</p>';
         }
     }
 };

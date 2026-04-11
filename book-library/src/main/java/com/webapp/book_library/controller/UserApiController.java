@@ -6,10 +6,7 @@ import com.webapp.book_library.repository.UserRepository;
 import com.webapp.book_library.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -25,17 +22,17 @@ public class UserApiController {
     private final UserProfileService userProfileService;
     private final com.webapp.book_library.service.UserService userService;
 
-    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
-    public org.springframework.http.ResponseEntity<Void> deleteUser(@org.springframework.web.bind.annotation.PathVariable Long id, Principal principal) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, Principal principal) {
         User currentUser = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         if (currentUser.getId().equals(id)) {
-            return org.springframework.http.ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().build();
         }
         
         userService.deleteUser(id);
-        return org.springframework.http.ResponseEntity.ok().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping
@@ -77,6 +74,24 @@ public class UserApiController {
         response.put("lastName", user.getLastName());
         response.put("roles", user.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toList()));
         response.put("isAdmin", user.getRoles().stream().anyMatch(r -> r.getName().name().equals("ROLE_ADMIN")));
+        response.put("profile", profile);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        UserProfile profile = userProfileService.getProfileByUserId(user.getId());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("firstName", user.getFirstName());
+        response.put("lastName", user.getLastName());
+        response.put("roles", user.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toList()));
         response.put("profile", profile);
         
         return ResponseEntity.ok(response);

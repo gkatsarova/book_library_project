@@ -93,6 +93,16 @@ public class RentalService {
     }
 
     @Transactional(readOnly = true)
+    public List<RentalDto> getUserRentals(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        return rentalRepository.findByUser(user).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<RentalDto> getAllRentals() {
         return rentalRepository.findAll().stream()
                 .map(this::convertToDto)
