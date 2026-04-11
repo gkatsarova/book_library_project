@@ -124,6 +124,16 @@ const rentals = {
     showRentModal(bookId, bookTitle) {
         document.getElementById('rental-book-id').value = bookId;
         document.getElementById('rental-book-title').textContent = bookTitle;
+        
+        // Set min date to today
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const today = `${year}-${month}-${day}`;
+        document.getElementById('return-date').setAttribute('min', today);
+        document.getElementById('return-date').value = today; // Default to today
+
         ui.showModal('rental-modal');
     }
 };
@@ -309,22 +319,59 @@ const profile = {
 
         // Load Rentals
         const rentalsList = document.getElementById('my-rentals-list');
-        if (rentalsList) {
+        const historyList = document.getElementById('my-history-list');
+        if (rentalsList && historyList) {
             try {
                 const myRentals = await rentals.getMy();
-                const activeRentals = myRentals.filter(r => r.status === 'RENTED');
+                
+                // Active Rentals (status is 'ACTIVE')
+                const activeRentals = myRentals.filter(r => r.status === 'ACTIVE');
                 if (activeRentals.length > 0) {
-                    rentalsList.innerHTML = activeRentals.map(r => `
-                        <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    const now = new Date();
+                    now.setHours(0,0,0,0);
+                    
+                    rentalsList.innerHTML = activeRentals.map(r => {
+                        const dueDate = new Date(r.returnDate);
+                        dueDate.setHours(0,0,0,0);
+                        const isLate = now > dueDate;
+                        let fineInfo = '';
+                        
+                        if (isLate) {
+                            const diffTime = Math.abs(now - dueDate);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const projectedFine = (diffDays * 1.00).toFixed(2);
+                            fineInfo = `<span class="badge badge-danger" style="margin-left: 0.5rem;">LATE - Fine: ${projectedFine} EUR</span>`;
+                        }
+
+                        return `
+                            <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isLate ? 'var(--destructive)' : 'var(--primary)'}">
+                                <div>
+                                    <h4 style="margin: 0;">${r.bookTitle} ${fineInfo}</h4>
+                                    <div class="meta">Due: ${dueDate.toLocaleDateString()}</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline" onclick="profile.returnBook(${r.id})">Return</button>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    rentalsList.innerHTML = '<p style="color: var(--muted-foreground);">No active rentals.</p>';
+                }
+
+                // History (status is 'RETURNED')
+                const returnedRentals = myRentals.filter(r => r.status === 'RETURNED');
+                if (returnedRentals.length > 0) {
+                    historyList.innerHTML = returnedRentals.map(r => `
+                        <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; opacity: 0.8;">
                             <div>
                                 <h4 style="margin: 0;">${r.bookTitle}</h4>
-                                <div class="meta">Due: ${new Date(r.returnDate).toLocaleDateString()}</div>
+                                <div class="meta">Rented: ${new Date(r.rentalDate).toLocaleDateString()} | Returned: ${new Date(r.actualReturnDate).toLocaleDateString()}</div>
+                                ${r.fine > 0 ? `<div style="color: var(--destructive); font-weight: 600; font-size: 0.85rem;">Fine Paid: ${r.fine.toFixed(2)} EUR</div>` : ''}
                             </div>
-                            <button class="btn btn-sm btn-outline" onclick="profile.returnBook(${r.id})">Return</button>
+                            <span class="badge badge-success">Returned</span>
                         </div>
                     `).join('');
                 } else {
-                    rentalsList.innerHTML = '<p style="color: var(--muted-foreground);">No active rentals.</p>';
+                    historyList.innerHTML = '<p style="color: var(--muted-foreground);">No rental history.</p>';
                 }
             } catch (e) {
                 console.error('Error loading rentals:', e);

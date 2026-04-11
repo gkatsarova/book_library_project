@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,11 @@ public class RentalService {
         if (!book.isAvailable()) {
             throw new RuntimeException("Book is already rented");
         }
-        
+
+        if (returnDate.isBefore(LocalDate.now())) {
+            throw new RuntimeException("Return date cannot be in the past");
+        }
+
         Rental rental = new Rental();
         rental.setUser(user);
         rental.setBook(book);
@@ -59,6 +64,16 @@ public class RentalService {
         }
         
         rental.setStatus("RETURNED");
+        rental.setActualReturnDate(LocalDate.now());
+
+        // Calculate fine
+        long daysLate = ChronoUnit.DAYS.between(rental.getReturnDate(), LocalDate.now());
+        if (daysLate > 0) {
+            rental.setFine(daysLate * 1.00);
+        } else {
+            rental.setFine(0.0);
+        }
+
         Book book = rental.getBook();
         book.setAvailable(true);
         bookRepository.save(book);
@@ -94,6 +109,8 @@ public class RentalService {
         dto.setRentalDate(rental.getRentalDate());
         dto.setReturnDate(rental.getReturnDate());
         dto.setStatus(rental.getStatus());
+        dto.setFine(rental.getFine());
+        dto.setActualReturnDate(rental.getActualReturnDate());
         return dto;
     }
 }

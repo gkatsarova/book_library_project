@@ -13,4 +13,6 @@ public class RentalDto {
     private LocalDate rentalDate;
     private LocalDate returnDate;
     private String status;
+    private Double fine;
+    private LocalDate actualReturnDate;
 }

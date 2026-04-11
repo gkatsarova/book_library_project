@@ -47,4 +47,8 @@ public class Rental {
 
     @Column(nullable = false)
     private String status; // ACTIVE, RETURNED
+
+    private Double fine = 0.0;
+
+    private LocalDate actualReturnDate;
 }
