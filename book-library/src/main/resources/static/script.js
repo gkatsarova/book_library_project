@@ -63,9 +63,10 @@ const ui = {
         if (user) {
             if (loginLink) loginLink.classList.add('hidden');
             if (logoutLink) logoutLink.classList.remove('hidden');
-            if (profileLink) profileLink.classList.remove('hidden');
-
+            
             const isAdmin = user.isAdmin === true;
+            if (profileLink && !isAdmin) profileLink.classList.remove('hidden');
+            else if (profileLink) profileLink.classList.add('hidden');
             document.querySelectorAll('.admin-only').forEach(el => {
                 if (isAdmin) {
                     el.classList.remove('hidden');
@@ -311,11 +312,6 @@ const profile = {
         if (!user) return;
         document.getElementById('user-email').textContent = user.email;
         document.getElementById('user-name').textContent = user.firstName + ' ' + user.lastName;
-        if (user.profile) {
-            document.getElementById('profile-phone').value = user.profile.phoneNumber || '';
-            document.getElementById('profile-address').value = user.profile.address || '';
-            document.getElementById('profile-birth').value = user.profile.birthDate || '';
-        }
 
         // Load Rentals
         const rentalsList = document.getElementById('my-rentals-list');

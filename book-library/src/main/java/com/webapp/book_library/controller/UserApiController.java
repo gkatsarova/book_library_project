@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -69,16 +66,5 @@ public class UserApiController {
         response.put("profile", profile);
         
         return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/me/profile")
-    public ResponseEntity<UserProfile> updateProfile(Principal principal, @RequestBody UserProfile profileDetails) {
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
-        User user = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        return ResponseEntity.ok(userProfileService.updateProfile(user.getId(), profileDetails));
     }
 }

@@ -6,7 +6,6 @@ import com.webapp.book_library.repository.UserProfileRepository;
 import com.webapp.book_library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,14 +23,5 @@ public class UserProfileService {
                     profile.setUser(user);
                     return userProfileRepository.save(profile);
                 });
-    }
-
-    @Transactional
-    public UserProfile updateProfile(Long userId, UserProfile profileDetails) {
-        UserProfile profile = getProfileByUserId(userId);
-        profile.setPhoneNumber(profileDetails.getPhoneNumber());
-        profile.setAddress(profileDetails.getAddress());
-        profile.setBirthDate(profileDetails.getBirthDate());
-        return userProfileRepository.save(profile);
     }
 }
