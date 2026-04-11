@@ -19,4 +19,5 @@ public class BookDto {
     private Set<Long> categoryIds;
     private Set<String> categoryNames;
     private String coverImageUrl;
+    private Boolean available;
 }

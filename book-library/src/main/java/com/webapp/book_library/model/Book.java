@@ -43,6 +43,9 @@ public class Book {
     @Column(nullable = false)
     private String isbn;
 
+    @Column(nullable = false)
+    private boolean available = true;
+
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 

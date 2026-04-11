@@ -134,6 +134,7 @@ public class BookService {
         }
         
         dto.setCoverImageUrl(book.getCoverImageUrl());
+        dto.setAvailable(book.isAvailable());
         return dto;
     }
 }

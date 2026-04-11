@@ -58,10 +58,8 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Cover Image URL</label>
-                    <label for="book-cover">
-                        <input type="url" id="book-cover" placeholder="https://example.com/image.jpg">
-                    </label>
+                    <label for="book-cover">Cover Image URL</label>
+                    <input type="text" id="book-cover" placeholder="https://example.com/image.jpg">
                 </div>
                 <div class="form-group">
                     <label>Categories (comma-separated)</label>
@@ -82,6 +80,28 @@
             </form>
         </div>
     </div>
+    
+    <!-- Rental Modal -->
+    <div id="rental-modal" class="modal hidden">
+        <div class="auth-card" style="max-width: 25rem; margin: auto;">
+            <h2>Rent Book</h2>
+            <p id="rental-book-title" style="margin-bottom: 1rem; font-weight: bold;"></p>
+            <form id="rental-form">
+                <input type="hidden" id="rental-book-id">
+                <div class="form-group">
+                    <label>Return Date</label>
+                    <label for="return-date">
+                        <input type="date" id="return-date" required>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn" style="flex: 1;">Confirm Rental</button>
+                    <button type="button" class="btn btn-outline" onclick="ui.hideModal('rental-modal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <style>
         .modal {

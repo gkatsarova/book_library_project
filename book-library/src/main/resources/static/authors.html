@@ -28,7 +28,7 @@
     <div class="container">
         <div class="section-header">
             <h1>Authors</h1>
-            <button class="btn admin-only hidden" onclick="ui.showModal('author-modal')">Add Author</button>
+            <button class="btn admin-only hidden" onclick="authors.clearForm(); ui.showModal('author-modal')">Add Author</button>
         </div>
         <div class="content-grid" id="authors-list"></div>
     </div>
@@ -36,19 +36,15 @@
     <div id="author-modal" class="modal hidden">
         <div class="auth-card" style="max-width: 32rem; margin: auto;">
             <h2>Author Details</h2>
-            <form id="author-form">
+            <form id="author-form" novalidate>
                 <input type="hidden" id="author-id">
                 <div class="form-group">
-                    <label>Name</label>
-                    <label for="author-name">
-                        <input type="text" id="author-name" required>
-                    </label>
+                    <label for="author-name">Name</label>
+                    <input type="text" id="author-name" required>
                 </div>
                 <div class="form-group">
-                    <label>Biography</label>
-                    <label for="author-biography">
-                        <textarea id="author-biography" rows="4"></textarea>
-                    </label>
+                    <label for="author-biography">Biography</label>
+                    <textarea id="author-biography" rows="4"></textarea>
                 </div>
                 <div style="display: flex; gap: 1rem;">
                     <button type="submit" class="btn" style="flex: 1;">Save</button>

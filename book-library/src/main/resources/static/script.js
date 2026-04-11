@@ -80,11 +80,16 @@ const ui = {
                     el.classList.remove('flex-gap');
                 }
             });
+            document.querySelectorAll('.user-only').forEach(el => {
+                if (!isAdmin) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
         } else {
             if (loginLink) loginLink.classList.remove('hidden');
             if (logoutLink) logoutLink.classList.add('hidden');
             if (profileLink) profileLink.classList.add('hidden');
             document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.user-only').forEach(el => el.classList.add('hidden'));
         }
     },
     showModal(id) {
@@ -100,6 +105,26 @@ const ui = {
         const span = alert.querySelector('span');
         if (span) span.textContent = message;
         setTimeout(() => alert.classList.remove('visible'), 5000);
+    }
+};
+
+const rentals = {
+    async rent(bookId, returnDate) {
+        return await api.post('/api/rentals/rent', { bookId, returnDate });
+    },
+    async getMy() {
+        return await api.get('/api/rentals/my') || [];
+    },
+    async getAll() {
+        return await api.get('/api/rentals/all') || [];
+    },
+    async return(id) {
+        return await api.post(`/api/rentals/return/${id}`, {});
+    },
+    showRentModal(bookId, bookTitle) {
+        document.getElementById('rental-book-id').value = bookId;
+        document.getElementById('rental-book-title').textContent = bookTitle;
+        ui.showModal('rental-modal');
     }
 };
 
@@ -141,14 +166,24 @@ const books = {
         list.innerHTML = data.map(book => `
             <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
                 <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-2x" style="color: var(--primary);"></i>`}
+                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
                 </div>
                 <div style="flex: 1;">
-                    <h3 style="margin-top: 0;">${book.title}</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <h3 style="margin-top: 0;">${book.title}</h3>
+                        <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}">
+                            ${book.available ? 'Available' : 'Rented'}
+                        </span>
+                    </div>
                     <div class="meta">By ${book.authorName} | ISBN: ${book.isbn}</div>
-                    <div class="admin-only hidden flex-gap" style="margin-top: 1rem;">
-                        <button class="btn" onclick="books.edit(${book.id})">Edit</button>
-                        <button class="btn btn-outline" onclick="books.delete(${book.id})">Delete</button>
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                        <span class="user-only hidden">
+                            ${book.available ? `<button class="btn btn-sm" onclick="rentals.showRentModal(${book.id}, '${book.title.replace(/'/g, "\\'")}')">Rent</button>` : ''}
+                        </span>
+                        <div class="admin-only hidden flex-gap">
+                            <button class="btn btn-sm" onclick="books.edit(${book.id})">Edit</button>
+                            <button class="btn btn-sm btn-outline" onclick="books.delete(${book.id})">Delete</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -211,6 +246,11 @@ const authors = {
             await api.delete('/api/authors/' + id);
             authors.loadAll();
         }
+    },
+    clearForm() {
+        document.getElementById('author-id').value = '';
+        document.getElementById('author-name').value = '';
+        document.getElementById('author-biography').value = '';
     }
 };
 
@@ -265,6 +305,42 @@ const profile = {
             document.getElementById('profile-phone').value = user.profile.phoneNumber || '';
             document.getElementById('profile-address').value = user.profile.address || '';
             document.getElementById('profile-birth').value = user.profile.birthDate || '';
+        }
+
+        // Load Rentals
+        const rentalsList = document.getElementById('my-rentals-list');
+        if (rentalsList) {
+            try {
+                const myRentals = await rentals.getMy();
+                const activeRentals = myRentals.filter(r => r.status === 'RENTED');
+                if (activeRentals.length > 0) {
+                    rentalsList.innerHTML = activeRentals.map(r => `
+                        <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0;">${r.bookTitle}</h4>
+                                <div class="meta">Due: ${new Date(r.returnDate).toLocaleDateString()}</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="profile.returnBook(${r.id})">Return</button>
+                        </div>
+                    `).join('');
+                } else {
+                    rentalsList.innerHTML = '<p style="color: var(--muted-foreground);">No active rentals.</p>';
+                }
+            } catch (e) {
+                console.error('Error loading rentals:', e);
+                rentalsList.innerHTML = '<p style="color: var(--destructive);">Error loading rentals.</p>';
+            }
+        }
+    },
+    async returnBook(rentalId) {
+        if (confirm('Are you sure you want to return this book?')) {
+            try {
+                await rentals.return(rentalId);
+                alert('Book returned successfully!');
+                profile.load();
+            } catch (err) {
+                alert(err.message);
+            }
         }
     }
 };
@@ -339,6 +415,18 @@ document.addEventListener('submit', async (e) => {
         try {
             await api.put('/api/users/me/profile', data);
             alert('Profile updated successfully!');
+        } catch (err) { alert(err.message); }
+    }
+
+    if (e.target.id === 'rental-form') {
+        e.preventDefault();
+        const bookId = document.getElementById('rental-book-id').value;
+        const returnDate = document.getElementById('return-date').value;
+        try {
+            await rentals.rent(bookId, returnDate);
+            ui.hideModal('rental-modal');
+            alert('Book rented successfully!');
+            books.loadAll();
         } catch (err) { alert(err.message); }
     }
 });

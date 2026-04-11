@@ -215,3 +215,23 @@ nav {
 .alert.visible { display: flex; align-items: center; gap: 0.5rem; }
 .alert-danger { background-color: hsla(0, 72%, 51%, 0.1); color: var(--destructive); border: 1px solid var(--destructive); }
 .alert-success { background-color: hsla(142, 55%, 40%, 0.1); color: var(--success); border: 1px solid var(--success); }
+/* ── Badges ── */
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-success {
+  background-color: hsla(142, 55%, 40%, 0.1);
+  color: var(--success);
+}
+.badge-danger {
+  background-color: hsla(0, 72%, 51%, 0.1);
+  color: var(--destructive);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+}
