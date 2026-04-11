@@ -291,17 +291,40 @@ const users = {
         const body = document.getElementById('user-list-body');
         if (!body) return;
         try {
-            const data = await api.get('/api/users') || [];
-            body.innerHTML = data.map(u => `
+            const [data, currentUser] = await Promise.all([
+                api.get('/api/users'),
+                auth.getCurrentUser()
+            ]);
+            
+            body.innerHTML = (data || []).map(u => `
                 <tr>
                     <td style="padding: 1rem;">${u.firstName} ${u.lastName}</td>
                     <td style="padding: 1rem;">${u.email}</td>
                     <td style="padding: 1rem;">${u.roles.join(', ')}</td>
+                    <td style="padding: 1rem;">
+                        ${(currentUser && currentUser.id === u.id) ? 
+                            '<span class="badge badge-outline">You</span>' : 
+                            `<button class="btn btn-sm btn-destructive" onclick="users.delete(${u.id})">Delete</button>`
+                        }
+                    </td>
                 </tr>
-            `).join('') || '<tr><td colspan="3" style="padding: 2rem; text-align: center;">No users found.</td></tr>';
+            `).join('') || '<tr><td colspan="4" style="padding: 2rem; text-align: center;">No users found.</td></tr>';
         } catch (e) { 
             console.error('User list error', e);
-            body.innerHTML = '<tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--destructive);">Access Denied</td></tr>'; 
+            body.innerHTML = '<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--destructive);">Access Denied</td></tr>'; 
+        }
+    },
+    async delete(id) {
+        if (confirm('Are you sure you want to delete this user? All their rental history and profile data will be removed.')) {
+            try {
+                const res = await fetch('/api/users/' + id, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('User deleted successfully!');
+                    this.loadAll();
+                } else {
+                    alert('Failed to delete user.');
+                }
+            } catch (err) { alert(err.message); }
         }
     }
 };

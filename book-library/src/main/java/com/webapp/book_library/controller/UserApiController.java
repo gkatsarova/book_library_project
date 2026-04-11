@@ -23,6 +23,20 @@ public class UserApiController {
 
     private final UserRepository userRepository;
     private final UserProfileService userProfileService;
+    private final com.webapp.book_library.service.UserService userService;
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public org.springframework.http.ResponseEntity<Void> deleteUser(@org.springframework.web.bind.annotation.PathVariable Long id, Principal principal) {
+        User currentUser = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (currentUser.getId().equals(id)) {
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+        
+        userService.deleteUser(id);
+        return org.springframework.http.ResponseEntity.ok().build();
+    }
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
