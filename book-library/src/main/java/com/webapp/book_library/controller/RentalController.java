@@ -44,4 +44,9 @@ public class RentalController {
     public ResponseEntity<List<RentalDto>> getUserRentals(@PathVariable Long userId) {
         return ResponseEntity.ok(rentalService.getUserRentals(userId));
     }
+
+    @GetMapping("/book/{bookId}")
+    public ResponseEntity<List<RentalDto>> getBookRentals(@PathVariable Long bookId) {
+        return ResponseEntity.ok(rentalService.getBookRentals(bookId));
+    }
 }

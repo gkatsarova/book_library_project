@@ -50,5 +50,6 @@ public class Rental {
 
     private Double fine = 0.0;
 
+    @Column(name = "actual_return_date")
     private LocalDate actualReturnDate;
 }

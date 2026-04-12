@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Library - Book Details</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">
+            <i class="fas fa-book-reader"></i>
+            <span>BookLibrary</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html" class="active">Books</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li class="user-only hidden" id="profile-link"><a href="profile.html">Profile</a></li>
+            <li class="admin-only hidden"><a href="users.html">Users</a></li>
+            <li id="logout-link"><a href="#" onclick="auth.logout()" class="btn btn-outline">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="max-width: 1000px;">
+        <div class="section-header">
+            <a href="books.html" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
+                <i class="fas fa-arrow-left"></i> Back to Books
+            </a>
+            <div style="display: flex; gap: 2rem; align-items: start; margin-top: 1rem;">
+                <div id="detail-book-cover" style="width: 200px; height: 300px; background: #eee; flex-shrink: 0; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg);">
+                    <i class="fas fa-book fa-5x" style="color: var(--primary);"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <h1 id="detail-book-title" style="margin: 0; font-size: 2.5rem;">Book Title</h1>
+                        <span id="detail-book-status" class="badge">Status</span>
+                    </div>
+                    <h2 id="detail-book-author" style="color: var(--primary); font-weight: 500; margin: 0.5rem 0;">Author Name</h2>
+                    <p id="detail-book-isbn" class="meta" style="font-size: 1.1rem;">ISBN: 1234567890</p>
+                    <div style="margin-top: 1.5rem;">
+                        <h3>Description</h3>
+                        <p id="detail-book-description" style="line-height: 1.6; font-size: 1.1rem; color: var(--muted-foreground);">
+                            No description available.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-book-history-section" class="auth-card hidden" style="margin-top: 3rem; border-top: 4px solid var(--primary);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <i class="fas fa-history fa-2x" style="color: var(--primary);"></i>
+                <h2 style="margin: 0;">Rental History (Admin Only)</h2>
+            </div>
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border);">
+                            <th style="padding: 1rem; text-align: left;">User</th>
+                            <th style="padding: 1rem; text-align: left;">Rental Date</th>
+                            <th style="padding: 1rem; text-align: left;">Expected Return</th>
+                            <th style="padding: 1rem; text-align: left;">Actual Return</th>
+                            <th style="padding: 1rem; text-align: left;">Fine</th>
+                            <th style="padding: 1rem; text-align: left;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="book-history-list">
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--muted-foreground);">Loading history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=1.2"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            
+            if (!bookId) {
+                window.location.href = 'books.html';
+                return;
+            }
+
+            try {
+                // Wait for script.js to initialize auth
+                await auth.getCurrentUser();
+                await bookDetailsPage.load(bookId);
+            } catch (err) {
+                console.error('Initialization error:', err);
+            }
+        });
+    </script>
+</body>
+</html>

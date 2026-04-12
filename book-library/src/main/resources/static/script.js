@@ -187,13 +187,14 @@ const books = {
                         </span>
                     </div>
                     <div class="meta">By ${book.authorName} | ISBN: ${book.isbn}</div>
-                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
                         <span class="user-only hidden">
                             ${book.available ? `<button class="btn btn-sm" onclick="rentals.showRentModal(${book.id}, '${book.title.replace(/'/g, "\\'")}')">Rent</button>` : ''}
                         </span>
                         <div class="admin-only hidden flex-gap">
                             <button class="btn btn-sm" onclick="books.edit(${book.id})">Edit</button>
-                            <button class="btn btn-sm btn-outline" onclick="books.delete(${book.id})">Delete</button>
+                            <button class="btn btn-sm btn-destructive" onclick="books.delete(${book.id})">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -380,6 +381,65 @@ const adminDetails = {
         } catch (e) {
             console.error('Error loading details:', e);
             rentalsList.innerHTML = '<p style="color: var(--destructive);">Failed to load user details.</p>';
+        }
+    }
+};
+
+const bookDetailsPage = {
+    async load(bookId) {
+        const historySection = document.getElementById('admin-book-history-section');
+        const historyList = document.getElementById('book-history-list');
+        
+        try {
+            const currentUser = await auth.getCurrentUser();
+            const book = await api.get('/api/books/' + bookId);
+            
+            // Populate Basic Info
+            document.getElementById('detail-book-title').textContent = book.title;
+            document.getElementById('detail-book-author').textContent = `By ${book.authorName}`;
+            document.getElementById('detail-book-isbn').textContent = `ISBN: ${book.isbn}`;
+            document.getElementById('detail-book-description').textContent = book.description || 'No description available.';
+            
+            if (book.coverImageUrl) {
+                const coverContainer = document.getElementById('detail-book-cover');
+                coverContainer.innerHTML = `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+            }
+
+            const statusBadge = document.getElementById('detail-book-status');
+            statusBadge.className = `badge ${book.available ? 'badge-success' : 'badge-danger'}`;
+            statusBadge.textContent = book.available ? 'Available' : 'Rented';
+
+            // Load History for Admins
+            if (currentUser && currentUser.isAdmin && historySection) {
+                historySection.classList.remove('hidden');
+                const historyData = await api.get('/api/rentals/book/' + bookId);
+                
+                if (historyData && historyData.length > 0) {
+                    historyList.innerHTML = historyData.map(r => `
+                        <tr>
+                            <td style="padding: 1rem;">${r.userName}</td>
+                            <td style="padding: 1rem;">${new Date(r.rentalDate).toLocaleDateString()}</td>
+                            <td style="padding: 1rem;">${new Date(r.returnDate).toLocaleDateString()}</td>
+                            <td style="padding: 1rem;">
+                                ${r.actualReturnDate ? new Date(r.actualReturnDate).toLocaleDateString() : 
+                                    (r.status === 'RETURNED' ? '-' : '<span style="color: var(--muted-foreground);">Still active</span>')}
+                            </td>
+                            <td style="padding: 1rem; font-weight: ${r.fine > 0 ? '600' : 'normal'}; color: ${r.fine > 0 ? 'var(--destructive)' : 'inherit'};">
+                                ${r.fine > 0 ? r.fine.toFixed(2) : '0.00'} EUR
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span class="badge ${r.status === 'ACTIVE' ? 'badge-primary' : 'badge-success'}">${r.status}</span>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    historyList.innerHTML = '<tr><td colspan="5" style="padding: 2rem; text-align: center;">No rental history found.</td></tr>';
+                }
+            }
+            await ui.updateAuthLinks();
+        } catch (e) {
+            console.error('Error loading book details:', e);
+            alert('Failed to load book details.');
         }
     }
 };
