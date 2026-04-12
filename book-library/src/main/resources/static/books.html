@@ -53,24 +53,22 @@
                 </div>
                 <div class="form-group">
                     <label>ISBN</label>
-                    <label for="book-isbn">
-                        <input type="text" id="book-isbn" required>
-                    </label>
+                        <input type="text" id="book-isbn" required pattern="^(?=(?:\D*\d){10}(?:(?:\D*\d){3})?$)[\d-]+$" title="Please enter a valid ISBN (10 or 13 digits, dashes allowed)">
                 </div>
                 <div class="form-group">
                     <label for="book-cover">Cover Image URL</label>
-                    <input type="text" id="book-cover" placeholder="https://example.com/image.jpg">
+                    <input type="text" id="book-cover" placeholder="https://example.com/image.jpg" required>
                 </div>
                 <div class="form-group">
                     <label>Categories (comma-separated)</label>
                     <label for="book-categories">
-                        <input type="text" id="book-categories" placeholder="Fiction, Science, History">
+                        <input type="text" id="book-categories" placeholder="Fiction, Science, History" required>
                     </label>
                 </div>
                 <div class="form-group">
                     <label>Description</label>
                     <label for="book-description">
-                        <textarea id="book-description" rows="3"></textarea>
+                        <textarea id="book-description" rows="3" required></textarea>
                     </label>
                 </div>
                 <div style="display: flex; gap: 1rem;">
