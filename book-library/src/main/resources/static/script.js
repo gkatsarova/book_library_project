@@ -158,7 +158,7 @@ const dashboard = {
             list.innerHTML = books.slice(-3).reverse().map(book => `
                 <div class="card">
                     <div style="height: 200px; background: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; border-radius: 8px; overflow: hidden;">
-                        ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
+                        ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-book fa-3x\' style=\'color: var(--primary);\'></i>'">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
                     </div>
                     <h3>${book.title}</h3>
                     <div class="meta">By ${book.authorName}</div>
@@ -177,7 +177,7 @@ const books = {
         list.innerHTML = data.map(book => `
             <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
                 <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
+                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-book fa-3x\' style=\'color: var(--primary);\'></i>'">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
                 </div>
                 <div style="flex: 1;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -193,8 +193,7 @@ const books = {
                             ${book.available ? `<button class="btn btn-sm" onclick="rentals.showRentModal(${book.id}, '${book.title.replace(/'/g, "\\'")}')">Rent</button>` : ''}
                         </span>
                         <div class="admin-only hidden flex-gap">
-                            <button class="btn btn-sm" onclick="books.edit(${book.id})">Edit</button>
-                            <button class="btn btn-sm btn-destructive" onclick="books.delete(${book.id})">Delete</button>
+                            <!-- Management buttons moved to details page -->
                         </div>
                     </div>
                 </div>
@@ -203,9 +202,9 @@ const books = {
         await ui.updateAuthLinks();
     },
     async loadAuthorsForSelect() {
-        const authors = await api.get('/api/authors') || [];
         const select = document.getElementById('book-author');
         if (select) {
+            const authors = await api.get('/api/authors') || [];
             select.innerHTML = '<option value="">Select Author</option>' + 
                 authors.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
         }
@@ -221,10 +220,16 @@ const books = {
         document.getElementById('book-description').value = book.description;
         ui.showModal('book-modal');
     },
-    async delete(id) {
+    async delete(id, redirect = false) {
         if (confirm('Delete this book?')) {
-            await api.delete('/api/books/' + id);
-            books.loadAll();
+            try {
+                await api.delete('/api/books/' + id);
+                if (redirect) {
+                    window.location.href = 'books.html';
+                } else {
+                    books.loadAll();
+                }
+            } catch (err) { alert(err.message); }
         }
     }
 };
@@ -415,7 +420,24 @@ const bookDetailsPage = {
                 if (book.available && currentUser && !currentUser.isAdmin) {
                     rentBtn.onclick = () => rentals.showRentModal(book.id, book.title);
                 } else {
-                    document.getElementById('detail-actions').classList.add('hidden');
+                    const detailActions = document.getElementById('detail-actions');
+                    if (detailActions && (!currentUser || currentUser.isAdmin)) {
+                        detailActions.classList.add('hidden');
+                    }
+                }
+            }
+
+            // Handle Admin Actions
+            const adminActions = document.getElementById('detail-admin-actions');
+            if (adminActions) {
+                if (currentUser && currentUser.isAdmin) {
+                    adminActions.classList.remove('hidden');
+                    adminActions.innerHTML = `
+                        <button class="btn" onclick="books.edit(${book.id})">Edit Book</button>
+                        <button class="btn btn-destructive" onclick="books.delete(${book.id}, true)">Delete Book</button>
+                    `;
+                } else {
+                    adminActions.classList.add('hidden');
                 }
             }
 

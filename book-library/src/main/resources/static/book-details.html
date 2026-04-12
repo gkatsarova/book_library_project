@@ -45,6 +45,10 @@
                             <button id="detail-rent-btn" class="btn" style="padding: 0.8rem 2rem;">Rent This Book</button>
                         </div>
                     </div>
+                    
+                    <div id="detail-admin-actions" class="admin-only hidden" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    </div>
+
                     <div style="margin-top: 1.5rem;">
                         <h3>Description</h3>
                         <p id="detail-book-description" style="line-height: 1.6; font-size: 1.1rem; color: var(--muted-foreground);">
@@ -74,11 +78,57 @@
                     </thead>
                     <tbody id="book-history-list">
                         <tr>
-                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--muted-foreground);">Loading history...</td>
+                            <td colspan="6" style="padding: 2rem; text-align: center; color: var(--muted-foreground);">Loading history...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Book Modal (Edit) -->
+    <div id="book-modal" class="modal hidden">
+        <div class="auth-card" style="max-width: 32rem; margin: auto;">
+            <h2>Edit Book</h2>
+            <form id="book-form">
+                <input type="hidden" id="book-id">
+                <div class="form-group">
+                    <label>Title</label>
+                    <label for="book-title"><input type="text" id="book-title" required></label>
+                </div>
+                <div class="form-group">
+                    <label>Author</label>
+                    <label for="book-author">
+                        <select id="book-author" required></select>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>ISBN</label>
+                    <label for="book-isbn">
+                        <input type="text" id="book-isbn" required>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="book-cover">Cover Image URL</label>
+                    <input type="text" id="book-cover" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Categories (comma-separated)</label>
+                    <label for="book-categories">
+                        <input type="text" id="book-categories" placeholder="Fiction, Science, History">
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <label for="book-description">
+                        <textarea id="book-description" rows="3"></textarea>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn" style="flex: 1;">Save Changes</button>
+                    <button type="button" class="btn btn-outline" onclick="ui.hideModal('book-modal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -124,7 +174,10 @@
 
             try {
                 // Wait for script.js to initialize auth
-                await auth.getCurrentUser();
+                const user = await auth.getCurrentUser();
+                if (user && user.isAdmin) {
+                    await books.loadAuthorsForSelect();
+                }
                 await bookDetailsPage.load(bookId);
             } catch (err) {
                 console.error('Initialization error:', err);
