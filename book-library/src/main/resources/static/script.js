@@ -158,7 +158,7 @@ const dashboard = {
             list.innerHTML = books.slice(-3).reverse().map(book => `
                 <div class="card">
                     <div style="height: 200px; background: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; border-radius: 8px; overflow: hidden;">
-                        ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-book fa-3x\' style=\'color: var(--primary);\'></i>'">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
+                        ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
                     </div>
                     <h3>${book.title}</h3>
                     <div class="meta">By ${book.authorName}</div>
@@ -177,7 +177,7 @@ const books = {
         list.innerHTML = data.map(book => `
             <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
                 <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-book fa-3x\' style=\'color: var(--primary);\'></i>'">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
+                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
                 </div>
                 <div style="flex: 1;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -277,9 +277,12 @@ const categories = {
         if (!list) return;
         const data = await api.get('/api/categories') || [];
         list.innerHTML = data.map(cat => `
-            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0;">${cat.name}</h3>
-                <button class="btn btn-outline admin-only hidden" style="width: auto;" onclick="categories.delete(${cat.id})">Delete</button>
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="location.href='category-books.html?id=${cat.id}&name=${encodeURIComponent(cat.name)}'">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-tag" style="color: var(--primary); font-size: 1.25rem;"></i>
+                    <h3 style="margin: 0;">${cat.name}</h3>
+                </div>
+                <button class="btn btn-outline btn-sm admin-only hidden" style="width: auto;" onclick="event.stopPropagation(); categories.delete(${cat.id})">Delete</button>
             </div>
         `).join('') || '<p>No categories found.</p>';
         await ui.updateAuthLinks();
@@ -289,6 +292,42 @@ const categories = {
             await api.delete('/api/categories/' + id);
             categories.loadAll();
         }
+    }
+}; 
+
+const categoryBooksPage = {
+    async load(categoryId, categoryName) {
+        const title = document.getElementById('category-title');
+        const list  = document.getElementById('category-books-list');
+        if (title) title.textContent = categoryName || 'Category';
+        if (!list)  return;
+        try {
+            const data = await api.get(`/api/books/category/${categoryId}`) || [];
+            list.innerHTML = data.length ? data.map(book => `
+                <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
+                    <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        ${book.coverImageUrl
+                            ? `<img src="${book.coverImageUrl}" style="width:100%;height:100%;object-fit:cover;">`
+                            : `<i class="fas fa-book fa-3x" style="color:var(--primary);"></i>`}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display:flex;justify-content:space-between;align-items:start;">
+                            <h3 style="margin-top:0;">${book.title}</h3>
+                            <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}">${book.available ? 'Available' : 'Rented'}</span>
+                        </div>
+                        <div class="meta">By ${book.authorName} | ISBN: ${book.isbn}</div>
+                        <p style="margin-top:0.5rem; color:var(--muted-foreground);">${book.description ? book.description.substring(0, 120) + '...' : ''}</p>
+                        <div style="margin-top:0.75rem;">
+                            <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')
+            : '<p style="color: var(--muted-foreground);">No books found in this category.</p>';
+        } catch(e) {
+            list.innerHTML = '<p>Error loading books.</p>';
+        }
+        await ui.updateAuthLinks();
     }
 };
 
@@ -407,7 +446,9 @@ const bookDetailsPage = {
             
             if (book.coverImageUrl) {
                 const coverContainer = document.getElementById('detail-book-cover');
-                coverContainer.innerHTML = `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+                if (coverContainer) {
+                    coverContainer.innerHTML = `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+                }
             }
 
             const statusBadge = document.getElementById('detail-book-status');

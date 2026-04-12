@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Library - Books by Category</title>
+    <meta name="description" content="Browse all books in this category from our library collection.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">
+            <i class="fas fa-book-reader"></i>
+            <span>BookLibrary</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="categories.html" class="active">Categories</a></li>
+            <li class="admin-only hidden"><a href="users.html">Users</a></li>
+            <li id="profile-link" class="user-only hidden"><a href="profile.html">Profile</a></li>
+            <li id="login-link"><a href="login.html" class="btn">Login</a></li>
+            <li id="logout-link" class="hidden"><a href="#" onclick="auth.logout()" class="btn btn-outline">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div style="margin-bottom: 2rem;">
+            <a href="categories.html" style="color: var(--muted-foreground); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-arrow-left"></i> Back to Categories
+            </a>
+            <div style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem;">
+                <div style="width: 3rem; height: 3rem; border-radius: 50%; background: hsla(24,60%,32%,0.1); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-tag" style="color: var(--primary); font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h1 id="category-title" style="margin: 0;">Category</h1>
+                    <p style="margin: 0; color: var(--muted-foreground); font-size: 0.9rem;">All books in this category</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book List -->
+        <div id="category-books-list">
+            <p style="color: var(--muted-foreground);">Loading books...</p>
+        </div>
+    </div>
+
+    <!-- Rental Modal -->
+    <div id="rental-modal" class="modal hidden">
+        <div class="auth-card" style="max-width: 25rem; margin: auto;">
+            <h2>Rent Book</h2>
+            <p id="rental-book-title" style="margin-bottom: 1rem; font-weight: bold;"></p>
+            <form id="rental-form">
+                <input type="hidden" id="rental-book-id">
+                <div class="form-group">
+                    <label>Return Date</label>
+                    <label for="return-date">
+                        <input type="date" id="return-date" required>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn" style="flex: 1;">Confirm Rental</button>
+                    <button type="button" class="btn btn-outline" onclick="ui.hideModal('rental-modal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; z-index: 1000; }
+        .modal.hidden { display: none; }
+        .active { border-bottom: 2px solid var(--primary); }
+    </style>
+
+    <script src="script.js?v=1.3"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const categoryId   = params.get('id');
+            const categoryName = decodeURIComponent(params.get('name') || 'Category');
+
+            if (!categoryId) {
+                window.location.href = 'categories.html';
+                return;
+            }
+
+            try {
+                await categoryBooksPage.load(categoryId, categoryName);
+            } catch(err) {
+                console.error('Initialization error:', err);
+            }
+        });
+    </script>
+</body>
+</html>
