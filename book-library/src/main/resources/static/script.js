@@ -1,3 +1,10 @@
+// Prevent loading from Back-Forward Cache
+window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
 const api = {
     async get(url) {
         const res = await fetch(url, { cache: 'no-store' });
@@ -7,7 +14,7 @@ const api = {
             try {
                 const errData = await res.json();
                 console.error('API Error details:', errData);
-            } catch (e) {}
+            } catch (e) { }
             throw new Error('API Error');
         }
         return res.json();
@@ -53,17 +60,37 @@ const auth = {
 const ui = {
     async updateAuthLinks() {
         const user = await auth.getCurrentUser();
+
+        // Protect pages from cached "back" navigation
+        const path = window.location.pathname;
+        const isAuthPage = path.endsWith('login.html') || path.endsWith('register.html');
+        const isUserPage = path.endsWith('profile.html');
+        const isAdminPage = path.endsWith('users.html') || path.endsWith('user-details.html');
+
+        if (!user && (isUserPage || isAdminPage)) {
+            window.location.replace('login.html');
+            return;
+        }
+        if (user && isAuthPage) {
+            window.location.replace('index.html');
+            return;
+        }
+        if (user && !user.isAdmin && isAdminPage) {
+            window.location.replace('index.html');
+            return;
+        }
+
         // Diagnostic log
         console.log('DEBUG: Current User session data:', user);
-        
+
         const loginLink = document.getElementById('login-link');
         const logoutLink = document.getElementById('logout-link');
         const profileLink = document.getElementById('profile-link');
-        
+
         if (user) {
             if (loginLink) loginLink.classList.add('hidden');
             if (logoutLink) logoutLink.classList.remove('hidden');
-            
+
             const isAdmin = user.isAdmin === true;
             if (profileLink && !isAdmin) profileLink.classList.remove('hidden');
             else if (profileLink) profileLink.classList.add('hidden');
@@ -73,7 +100,7 @@ const ui = {
                     if (el.tagName === 'DIV' || el.tagName === 'LI') {
                         el.style.display = '';
                         if (el.id === 'add-book-container' || el.classList.contains('flex-gap-container')) {
-                             el.classList.add('flex-gap');
+                            el.classList.add('flex-gap');
                         }
                     }
                 } else {
@@ -115,9 +142,9 @@ const bookUI = {
         <div class="card book-card" style="display: flex; flex-direction: column; height: 320px; padding: 1.5rem; margin-bottom: 0;">
             <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-shrink: 0;">
                 <div style="width: 90px; height: 130px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; flex-shrink: 0;">
-                    ${book.coverImageUrl 
-                        ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: contain;">` 
-                        : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-book fa-2x" style="color: var(--primary);"></i></div>`}
+                    ${book.coverImageUrl
+                ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: contain;">`
+                : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-book fa-2x" style="color: var(--primary);"></i></div>`}
                 </div>
 
                 <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
@@ -169,7 +196,7 @@ const rentals = {
     showRentModal(bookId, bookTitle) {
         document.getElementById('rental-book-id').value = bookId;
         document.getElementById('rental-book-title').textContent = bookTitle;
-        
+
         // Set min date to today
         const now = new Date();
         const year = now.getFullYear();
@@ -216,7 +243,7 @@ const books = {
         const select = document.getElementById('book-author');
         if (select) {
             const authors = await api.get('/api/authors') || [];
-            select.innerHTML = '<option value="">Select Author</option>' + 
+            select.innerHTML = '<option value="">Select Author</option>' +
                 authors.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
         }
     },
@@ -307,19 +334,19 @@ const categories = {
             categories.loadAll();
         }
     }
-}; 
+};
 
 const categoryBooksPage = {
     async load(categoryId, categoryName) {
         const title = document.getElementById('category-title');
-        const list  = document.getElementById('category-books-list');
+        const list = document.getElementById('category-books-list');
         if (title) title.textContent = categoryName || 'Category';
-        if (!list)  return;
+        if (!list) return;
         try {
             const data = await api.get(`/api/books/category/${categoryId}`) || [];
             list.innerHTML = data.length ? data.map(book => bookUI.generateCard(book)).join('')
-            : '<p style="color: var(--muted-foreground);">No books found in this category.</p>';
-        } catch(e) {
+                : '<p style="color: var(--muted-foreground);">No books found in this category.</p>';
+        } catch (e) {
             list.innerHTML = '<p>Error loading books.</p>';
         }
         await ui.updateAuthLinks();
@@ -329,14 +356,14 @@ const categoryBooksPage = {
 const authorBooksPage = {
     async load(authorId, authorName) {
         const title = document.getElementById('author-title');
-        const list  = document.getElementById('author-books-list');
+        const list = document.getElementById('author-books-list');
         if (title) title.textContent = authorName || 'Author';
-        if (!list)  return;
+        if (!list) return;
         try {
             const data = await api.get(`/api/books/author/${authorId}`) || [];
             list.innerHTML = data.length ? data.map(book => bookUI.generateCard(book)).join('')
-            : '<p style="color: var(--muted-foreground);">No books found for this author.</p>';
-        } catch(e) {
+                : '<p style="color: var(--muted-foreground);">No books found for this author.</p>';
+        } catch (e) {
             list.innerHTML = '<p>Error loading books.</p>';
         }
         await ui.updateAuthLinks();
@@ -352,26 +379,26 @@ const users = {
                 api.get('/api/users'),
                 auth.getCurrentUser()
             ]);
-            
+
             body.innerHTML = (data || []).map(u => `
                 <tr>
                     <td style="padding: 1rem;">${u.firstName} ${u.lastName}</td>
                     <td style="padding: 1rem;">${u.email}</td>
                     <td style="padding: 1rem;">${u.roles.join(', ')}</td>
                     <td style="padding: 1rem; display: flex; gap: 0.5rem;">
-                        ${(currentUser && currentUser.id === u.id) ? 
-                            '<span class="badge badge-outline">You (Admin)</span>' : 
-                            `
+                        ${(currentUser && currentUser.id === u.id) ?
+                    '<span class="badge badge-outline">You (Admin)</span>' :
+                    `
                             <button class="btn btn-sm btn-outline" onclick="location.href='user-details.html?id=${u.id}'">View</button>
                             <button class="btn btn-sm btn-destructive" onclick="users.delete(${u.id})">Delete</button>
                             `
-                        }
+                }
                     </td>
                 </tr>
             `).join('') || '<tr><td colspan="4" style="padding: 2rem; text-align: center;">No users found.</td></tr>';
-        } catch (e) { 
+        } catch (e) {
             console.error('User list error', e);
-            body.innerHTML = '<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--destructive);">Access Denied</td></tr>'; 
+            body.innerHTML = '<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--destructive);">Access Denied</td></tr>';
         }
     },
     async delete(id) {
@@ -445,11 +472,11 @@ const bookDetailsPage = {
     async load(bookId) {
         const historySection = document.getElementById('admin-book-history-section');
         const historyList = document.getElementById('book-history-list');
-        
+
         try {
             const currentUser = await auth.getCurrentUser();
             const book = await api.get('/api/books/' + bookId);
-            
+
             // Populate Basic Info
             document.getElementById('detail-book-title').textContent = book.title;
             const authorDetail = document.getElementById('detail-book-author');
@@ -458,7 +485,7 @@ const bookDetailsPage = {
             }
             document.getElementById('detail-book-isbn').textContent = `ISBN: ${book.isbn}`;
             document.getElementById('detail-book-description').textContent = book.description || 'No description available.';
-            
+
             if (book.coverImageUrl) {
                 const coverContainer = document.getElementById('detail-book-cover');
                 if (coverContainer) {
@@ -501,7 +528,7 @@ const bookDetailsPage = {
             if (currentUser && currentUser.isAdmin && historySection) {
                 historySection.classList.remove('hidden');
                 const historyData = await api.get('/api/rentals/book/' + bookId);
-                
+
                 if (historyData && historyData.length > 0) {
                     historyList.innerHTML = historyData.map(r => `
                         <tr>
@@ -509,8 +536,8 @@ const bookDetailsPage = {
                             <td style="padding: 1rem;">${new Date(r.rentalDate).toLocaleDateString()}</td>
                             <td style="padding: 1rem;">${new Date(r.returnDate).toLocaleDateString()}</td>
                             <td style="padding: 1rem;">
-                                ${r.actualReturnDate ? new Date(r.actualReturnDate).toLocaleDateString() : 
-                                    (r.status === 'RETURNED' ? '-' : '<span style="color: var(--muted-foreground);">Still active</span>')}
+                                ${r.actualReturnDate ? new Date(r.actualReturnDate).toLocaleDateString() :
+                            (r.status === 'RETURNED' ? '-' : '<span style="color: var(--muted-foreground);">Still active</span>')}
                             </td>
                             <td style="padding: 1rem; font-weight: ${r.fine > 0 ? '600' : 'normal'}; color: ${r.fine > 0 ? 'var(--destructive)' : 'inherit'};">
                                 ${r.fine > 0 ? r.fine.toFixed(2) : '0.00'} EUR
@@ -545,19 +572,19 @@ const profile = {
         if (rentalsList && historyList) {
             try {
                 const myRentals = await rentals.getMy();
-                
+
                 // Active Rentals (status is 'ACTIVE')
                 const activeRentals = myRentals.filter(r => r.status === 'ACTIVE');
                 if (activeRentals.length > 0) {
                     const now = new Date();
-                    now.setHours(0,0,0,0);
-                    
+                    now.setHours(0, 0, 0, 0);
+
                     rentalsList.innerHTML = activeRentals.map(r => {
                         const dueDate = new Date(r.returnDate);
-                        dueDate.setHours(0,0,0,0);
+                        dueDate.setHours(0, 0, 0, 0);
                         const isLate = now > dueDate;
                         let fineInfo = '';
-                        
+
                         if (isLate) {
                             const diffTime = Math.abs(now - dueDate);
                             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
