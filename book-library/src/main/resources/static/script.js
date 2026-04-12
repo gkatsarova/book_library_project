@@ -186,7 +186,9 @@ const books = {
                             ${book.available ? 'Available' : 'Rented'}
                         </span>
                     </div>
-                    <div class="meta">By ${book.authorName} | ISBN: ${book.isbn}</div>
+                    <div class="meta">
+                        <a href="author-books.html?id=${book.authorId}&name=${encodeURIComponent(book.authorName)}" style="color: inherit; text-decoration: underline;">By ${book.authorName}</a> | ISBN: ${book.isbn}
+                    </div>
                     <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
                         <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
                         <span class="user-only hidden">
@@ -240,12 +242,15 @@ const authors = {
         if (!list) return;
         const data = await api.get('/api/authors') || [];
         list.innerHTML = data.map(author => `
-            <div class="card">
-                <h3>${author.name}</h3>
+            <div class="card" style="cursor: pointer;" onclick="location.href='author-books.html?id=${author.id}&name=${encodeURIComponent(author.name)}'">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-user-edit" style="color: var(--primary); font-size: 1.25rem;"></i>
+                    <h3 style="margin: 0;">${author.name}</h3>
+                </div>
                 <p>${author.biography || 'No biography available.'}</p>
                 <div class="admin-only hidden flex-gap" style="margin-top: 1rem;">
-                    <button class="btn" onclick="authors.edit(${author.id})">Edit</button>
-                    <button class="btn btn-outline" onclick="authors.delete(${author.id})">Delete</button>
+                    <button class="btn" onclick="event.stopPropagation(); authors.edit(${author.id})">Edit</button>
+                    <button class="btn btn-outline" onclick="event.stopPropagation(); authors.delete(${author.id})">Delete</button>
                 </div>
             </div>
         `).join('') || '<p>No authors found.</p>';
@@ -324,6 +329,42 @@ const categoryBooksPage = {
                 </div>
             `).join('')
             : '<p style="color: var(--muted-foreground);">No books found in this category.</p>';
+        } catch(e) {
+            list.innerHTML = '<p>Error loading books.</p>';
+        }
+        await ui.updateAuthLinks();
+    }
+};
+
+const authorBooksPage = {
+    async load(authorId, authorName) {
+        const title = document.getElementById('author-title');
+        const list  = document.getElementById('author-books-list');
+        if (title) title.textContent = authorName || 'Author';
+        if (!list)  return;
+        try {
+            const data = await api.get(`/api/books/author/${authorId}`) || [];
+            list.innerHTML = data.length ? data.map(book => `
+                <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
+                    <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        ${book.coverImageUrl
+                            ? `<img src="${book.coverImageUrl}" style="width:100%;height:100%;object-fit:cover;">`
+                            : `<i class="fas fa-book fa-3x" style="color:var(--primary);"></i>`}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display:flex;justify-content:space-between;align-items:start;">
+                            <h3 style="margin-top:0;">${book.title}</h3>
+                            <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}">${book.available ? 'Available' : 'Rented'}</span>
+                        </div>
+                        <div class="meta">ISBN: ${book.isbn}</div>
+                        <p style="margin-top:0.5rem; color:var(--muted-foreground);">${book.description ? book.description.substring(0, 120) + '...' : ''}</p>
+                        <div style="margin-top:0.75rem;">
+                            <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')
+            : '<p style="color: var(--muted-foreground);">No books found for this author.</p>';
         } catch(e) {
             list.innerHTML = '<p>Error loading books.</p>';
         }
@@ -440,7 +481,10 @@ const bookDetailsPage = {
             
             // Populate Basic Info
             document.getElementById('detail-book-title').textContent = book.title;
-            document.getElementById('detail-book-author').textContent = `By ${book.authorName}`;
+            const authorDetail = document.getElementById('detail-book-author');
+            if (authorDetail) {
+                authorDetail.innerHTML = `<a href="author-books.html?id=${book.authorId}&name=${encodeURIComponent(book.authorName)}" style="color: inherit; text-decoration: underline;">By ${book.authorName}</a>`;
+            }
             document.getElementById('detail-book-isbn').textContent = `ISBN: ${book.isbn}`;
             document.getElementById('detail-book-description').textContent = book.description || 'No description available.';
             

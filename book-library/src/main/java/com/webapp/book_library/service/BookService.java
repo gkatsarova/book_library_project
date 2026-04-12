@@ -42,6 +42,15 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
+    public List<BookDto> getBooksByAuthor(Long authorId) {
+        Author author = authorRepository.findById(authorId)
+                .orElseThrow(() -> new RuntimeException("Author not found"));
+        return bookRepository.findByAuthor(author).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public BookDto getBookById(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found"));

@@ -32,6 +32,11 @@ public class BookApiController {
         return bookService.getBooksByCategory(categoryId);
     }
 
+    @GetMapping("/author/{authorId}")
+    public List<BookDto> getBooksByAuthor(@PathVariable Long authorId) {
+        return bookService.getBooksByAuthor(authorId);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<BookDto> getBookById(@PathVariable Long id) {
         return ResponseEntity.ok(bookService.getBookById(id));
