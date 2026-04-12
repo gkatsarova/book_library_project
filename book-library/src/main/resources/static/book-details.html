@@ -40,6 +40,11 @@
                     </div>
                     <h2 id="detail-book-author" style="color: var(--primary); font-weight: 500; margin: 0.5rem 0;">Author Name</h2>
                     <p id="detail-book-isbn" class="meta" style="font-size: 1.1rem;">ISBN: 1234567890</p>
+                    <div id="detail-actions" style="margin-top: 1.5rem;">
+                        <div class="user-only hidden">
+                            <button id="detail-rent-btn" class="btn" style="padding: 0.8rem 2rem;">Rent This Book</button>
+                        </div>
+                    </div>
                     <div style="margin-top: 1.5rem;">
                         <h3>Description</h3>
                         <p id="detail-book-description" style="line-height: 1.6; font-size: 1.1rem; color: var(--muted-foreground);">
@@ -76,6 +81,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Rental Modal -->
+    <div id="rental-modal" class="modal hidden">
+        <div class="auth-card" style="max-width: 25rem; margin: auto;">
+            <h2>Rent Book</h2>
+            <p id="rental-book-title" style="margin-bottom: 1rem; font-weight: bold;"></p>
+            <form id="rental-form">
+                <input type="hidden" id="rental-book-id">
+                <div class="form-group">
+                    <label>Return Date</label>
+                    <label for="return-date">
+                        <input type="date" id="return-date" required>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn" style="flex: 1;">Confirm Rental</button>
+                    <button type="button" class="btn btn-outline" onclick="ui.hideModal('rental-modal')" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; z-index: 1000;
+        }
+        .modal.hidden { display: none; }
+    </style>
 
     <script src="script.js?v=1.2"></script>
     <script>

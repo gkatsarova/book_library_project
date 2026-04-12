@@ -409,6 +409,16 @@ const bookDetailsPage = {
             statusBadge.className = `badge ${book.available ? 'badge-success' : 'badge-danger'}`;
             statusBadge.textContent = book.available ? 'Available' : 'Rented';
 
+            // Handle Rent Button for Users
+            const rentBtn = document.getElementById('detail-rent-btn');
+            if (rentBtn) {
+                if (book.available && currentUser && !currentUser.isAdmin) {
+                    rentBtn.onclick = () => rentals.showRentModal(book.id, book.title);
+                } else {
+                    document.getElementById('detail-actions').classList.add('hidden');
+                }
+            }
+
             // Load History for Admins
             if (currentUser && currentUser.isAdmin && historySection) {
                 historySection.classList.remove('hidden');
