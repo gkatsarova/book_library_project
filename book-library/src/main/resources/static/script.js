@@ -109,6 +109,50 @@ const ui = {
     }
 };
 
+const bookUI = {
+    generateCard(book) {
+        return `
+        <div class="card book-card" style="display: flex; flex-direction: column; height: 320px; padding: 1.5rem; margin-bottom: 0;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-shrink: 0;">
+                <div style="width: 90px; height: 130px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; flex-shrink: 0;">
+                    ${book.coverImageUrl 
+                        ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: contain;">` 
+                        : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-book fa-2x" style="color: var(--primary);"></i></div>`}
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${book.title}">${book.title}</h3>
+                    
+                    <div class="meta" style="font-size: 0.85rem; color: var(--muted-foreground); display: flex; flex-direction: column; gap: 0.2rem;">
+                        <a href="author-books.html?id=${book.authorId}&name=${encodeURIComponent(book.authorName)}" style="color: inherit; text-decoration: underline;">By ${book.authorName}</a>
+                        <span>ISBN: ${book.isbn}</span>
+                    </div>
+                    
+                    <div style="margin-top: auto; padding-top: 0.5rem;">
+                        <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}" style="font-size: 0.70rem;">
+                            ${book.available ? 'Available' : 'Rented'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <p style="flex-grow: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-bottom: 1rem; font-size: 0.95rem; color: var(--foreground);">
+                ${book.description || 'No description available'}
+            </p>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: auto; flex-shrink: 0;">
+                <button class="btn btn-sm btn-outline" style="flex: ${book.available ? '1' : '100%'};" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
+                ${book.available ? `
+                <div class="user-only hidden" style="flex: 1;">
+                    <button class="btn btn-sm" style="width: 100%;" onclick="rentals.showRentModal(${book.id}, '${book.title.replace(/'/g, "\\'")}')">Rent</button>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        `;
+    }
+};
+
 const rentals = {
     async rent(bookId, returnDate) {
         return await api.post('/api/rentals/rent', { bookId, returnDate });
@@ -155,16 +199,7 @@ const dashboard = {
         if (!list) return;
         try {
             const books = await api.get('/api/books') || [];
-            list.innerHTML = books.slice(-3).reverse().map(book => `
-                <div class="card">
-                    <div style="height: 200px; background: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; border-radius: 8px; overflow: hidden;">
-                        ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
-                    </div>
-                    <h3>${book.title}</h3>
-                    <div class="meta">By ${book.authorName}</div>
-                    <p>${book.description ? book.description.substring(0, 100) + '...' : 'No description'}</p>
-                </div>
-            `).join('') || '<p>No books added yet.</p>';
+            list.innerHTML = books.slice(-3).reverse().map(book => bookUI.generateCard(book)).join('') || '<p>No books added yet.</p>';
         } catch (e) { list.innerHTML = 'Error loading books.'; }
     }
 };
@@ -174,33 +209,7 @@ const books = {
         const list = document.getElementById('books-list');
         if (!list) return;
         const data = await api.get('/api/books') || [];
-        list.innerHTML = data.map(book => `
-            <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
-                <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                    ${book.coverImageUrl ? `<img src="${book.coverImageUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-book fa-3x" style="color: var(--primary);"></i>`}
-                </div>
-                <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <h3 style="margin-top: 0;">${book.title}</h3>
-                        <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}">
-                            ${book.available ? 'Available' : 'Rented'}
-                        </span>
-                    </div>
-                    <div class="meta">
-                        <a href="author-books.html?id=${book.authorId}&name=${encodeURIComponent(book.authorName)}" style="color: inherit; text-decoration: underline;">By ${book.authorName}</a> | ISBN: ${book.isbn}
-                    </div>
-                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
-                        <span class="user-only hidden">
-                            ${book.available ? `<button class="btn btn-sm" onclick="rentals.showRentModal(${book.id}, '${book.title.replace(/'/g, "\\'")}')">Rent</button>` : ''}
-                        </span>
-                        <div class="admin-only hidden flex-gap">
-                            <!-- Management buttons moved to details page -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('') || '<p>No books found.</p>';
+        list.innerHTML = data.map(book => bookUI.generateCard(book)).join('') || '<p>No books found.</p>';
         await ui.updateAuthLinks();
     },
     async loadAuthorsForSelect() {
@@ -308,26 +317,7 @@ const categoryBooksPage = {
         if (!list)  return;
         try {
             const data = await api.get(`/api/books/category/${categoryId}`) || [];
-            list.innerHTML = data.length ? data.map(book => `
-                <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
-                    <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                        ${book.coverImageUrl
-                            ? `<img src="${book.coverImageUrl}" style="width:100%;height:100%;object-fit:cover;">`
-                            : `<i class="fas fa-book fa-3x" style="color:var(--primary);"></i>`}
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="display:flex;justify-content:space-between;align-items:start;">
-                            <h3 style="margin-top:0;">${book.title}</h3>
-                            <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}">${book.available ? 'Available' : 'Rented'}</span>
-                        </div>
-                        <div class="meta">By ${book.authorName} | ISBN: ${book.isbn}</div>
-                        <p style="margin-top:0.5rem; color:var(--muted-foreground);">${book.description ? book.description.substring(0, 120) + '...' : ''}</p>
-                        <div style="margin-top:0.75rem;">
-                            <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('')
+            list.innerHTML = data.length ? data.map(book => bookUI.generateCard(book)).join('')
             : '<p style="color: var(--muted-foreground);">No books found in this category.</p>';
         } catch(e) {
             list.innerHTML = '<p>Error loading books.</p>';
@@ -344,26 +334,7 @@ const authorBooksPage = {
         if (!list)  return;
         try {
             const data = await api.get(`/api/books/author/${authorId}`) || [];
-            list.innerHTML = data.length ? data.map(book => `
-                <div class="card" style="display: flex; gap: 1.5rem; align-items: start;">
-                    <div style="width: 100px; height: 140px; background: #eee; flex-shrink: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                        ${book.coverImageUrl
-                            ? `<img src="${book.coverImageUrl}" style="width:100%;height:100%;object-fit:cover;">`
-                            : `<i class="fas fa-book fa-3x" style="color:var(--primary);"></i>`}
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="display:flex;justify-content:space-between;align-items:start;">
-                            <h3 style="margin-top:0;">${book.title}</h3>
-                            <span class="badge ${book.available ? 'badge-success' : 'badge-danger'}">${book.available ? 'Available' : 'Rented'}</span>
-                        </div>
-                        <div class="meta">ISBN: ${book.isbn}</div>
-                        <p style="margin-top:0.5rem; color:var(--muted-foreground);">${book.description ? book.description.substring(0, 120) + '...' : ''}</p>
-                        <div style="margin-top:0.75rem;">
-                            <button class="btn btn-sm btn-outline" onclick="location.href='book-details.html?id=${book.id}'">Details</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('')
+            list.innerHTML = data.length ? data.map(book => bookUI.generateCard(book)).join('')
             : '<p style="color: var(--muted-foreground);">No books found for this author.</p>';
         } catch(e) {
             list.innerHTML = '<p>Error loading books.</p>';
@@ -643,7 +614,7 @@ const profile = {
     }
 };
 
-// Form Event Listeners (Unified)
+// Form Event Listeners
 document.addEventListener('submit', async (e) => {
     if (e.target.id === 'registrationForm') {
         e.preventDefault();
