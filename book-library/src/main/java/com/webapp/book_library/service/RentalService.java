@@ -55,10 +55,21 @@ public class RentalService {
     }
 
     @Transactional
-    public RentalDto returnBook(Long rentalId) {
+    public RentalDto returnBook(Long rentalId, String username) {
         Rental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(() -> new RuntimeException("Rental not found"));
-        
+
+        User currentUser = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName().name().equals("ROLE_ADMIN"));
+        boolean isOwner = rental.getUser().getId().equals(currentUser.getId());
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Access denied: you can only return your own rentals");
+        }
+
         if ("RETURNED".equals(rental.getStatus())) {
             throw new RuntimeException("Book already returned");
         }
@@ -77,7 +88,7 @@ public class RentalService {
         Book book = rental.getBook();
         book.setAvailable(true);
         bookRepository.save(book);
-        
+
         Rental savedRental = rentalRepository.save(rental);
         return convertToDto(savedRental);
     }

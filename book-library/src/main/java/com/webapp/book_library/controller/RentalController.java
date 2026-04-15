@@ -26,8 +26,8 @@ public class RentalController {
     }
 
     @PostMapping("/return/{id}")
-    public ResponseEntity<RentalDto> returnBook(@PathVariable Long id) {
-        return ResponseEntity.ok(rentalService.returnBook(id));
+    public ResponseEntity<RentalDto> returnBook(@PathVariable Long id, Principal principal) {
+        return ResponseEntity.ok(rentalService.returnBook(id, principal.getName()));
     }
 
     @GetMapping("/my")
