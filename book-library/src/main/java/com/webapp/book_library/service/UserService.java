@@ -26,13 +26,13 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void registerNewUserAccount(UserRegistrationDto registrationDto) throws Exception {
+    public void registerNewUserAccount(UserRegistrationDto registrationDto) throws IllegalArgumentException {
         if (userRepository.existsByEmail(registrationDto.getEmail())) {
-            throw new Exception("There is an account with that email address: " + registrationDto.getEmail());
+            throw new IllegalArgumentException("There is an account with that email address: " + registrationDto.getEmail());
         }
 
         if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
-            throw new Exception("Passwords do not match!");
+            throw new IllegalArgumentException("Passwords do not match!");
         }
 
         User user = new User();

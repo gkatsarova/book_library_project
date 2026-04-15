@@ -35,14 +35,15 @@ public class AuthController {
                                 : "Invalid",
                         (existing, replacement) -> existing
                 ));
+            errors.put("message", "Validation failed: " + errors.values().stream().findFirst().orElse("Check your inputs"));
             return ResponseEntity.badRequest().body(errors);
         }
         
         try {
             userService.registerNewUserAccount(registrationDto);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             Map<String, String> response = new HashMap<>();
-            response.put("error", e.getMessage());
+            response.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
