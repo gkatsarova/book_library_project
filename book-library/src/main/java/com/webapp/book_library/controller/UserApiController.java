@@ -2,7 +2,6 @@ package com.webapp.book_library.controller;
 
 import com.webapp.book_library.model.User;
 import com.webapp.book_library.model.UserProfile;
-import com.webapp.book_library.repository.UserRepository;
 import com.webapp.book_library.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +17,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserApiController {
 
-    private final UserRepository userRepository;
     private final UserProfileService userProfileService;
     private final com.webapp.book_library.service.UserService userService;
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id, Principal principal) {
-        User currentUser = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = userService.findByEmail(principal.getName());
         
         if (currentUser.getId().equals(id)) {
             return ResponseEntity.badRequest().build();
@@ -37,7 +34,7 @@ public class UserApiController {
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
-        List<Map<String, Object>> userList = userRepository.findAll().stream().map(user -> {
+        List<Map<String, Object>> userList = userService.findAll().stream().map(user -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", user.getId());
             map.put("email", user.getEmail());
@@ -51,7 +48,7 @@ public class UserApiController {
 
     @GetMapping("/check-email")
     public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam String email) {
-        boolean exists = userRepository.existsByEmail(email);
+        boolean exists = userService.existsByEmail(email);
         Map<String, Boolean> response = new HashMap<>();
         response.put("exists", exists);
         return ResponseEntity.ok(response);
@@ -62,8 +59,7 @@ public class UserApiController {
         if (principal == null) {
             return ResponseEntity.status(401).build();
         }
-        User user = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findByEmail(principal.getName());
         
         UserProfile profile = userProfileService.getProfileByUserId(user.getId());
 
@@ -81,8 +77,7 @@ public class UserApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findById(id);
         
         UserProfile profile = userProfileService.getProfileByUserId(user.getId());
 
